@@ -22,6 +22,7 @@ from fastapi.staticfiles import StaticFiles
 
 import fill_forms
 from attachment import build_mileage_attachment, to_pil_image
+from ocr import OcrError, recognize_receipt
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 TEMPLATES_DIR = BASE_DIR / "templates"
@@ -38,6 +39,19 @@ def get_routes():
     if not ROUTES_JSON.exists():
         return {"base": {}, "routes": []}
     return json.loads(ROUTES_JSON.read_text(encoding="utf-8"))
+
+
+@app.post("/api/ocr")
+async def ocr(photo: UploadFile = File(...), mode: str = Form("trip")):
+    """收據拍照辨識：照片只在記憶體處理，這裡讀完 bytes 就不再持有檔案，辨識完即丟、不落地存檔。"""
+    raw = await photo.read()
+    try:
+        result = recognize_receipt(raw, photo.content_type or "", mode)
+    except OcrError as e:
+        raise HTTPException(400, str(e)) from e
+    finally:
+        del raw
+    return result
 
 
 @app.post("/api/generate")

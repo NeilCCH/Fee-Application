@@ -98,6 +98,54 @@
     noteEl.classList.remove("hidden");
   }
 
+  // ---------- 拍照 OCR 辨識（照片只在傳送當下處理，辨識完立刻捨棄參照，不留存） ----------
+  const ROW_CATEGORY_FIELD = {
+    "火車高鐵": "r_train", "計程車": "r_taxi", "自用車油": "r_fuel", "自用車通行": "r_toll",
+    "飛機": "r_flight", "交通其他": "r_otherTransit", "住宿費": "r_hotel", "膳雜費": "r_meal",
+    "交際費": "r_social", "其他": "r_other",
+  };
+
+  function shortDate(s) {
+    const m = String(s).match(/(\d+)[\/-](\d+)(?:[\/-](\d+))?/);
+    if (!m) return "";
+    return m[3] ? `${parseInt(m[2], 10)}/${parseInt(m[3], 10)}` : `${parseInt(m[1], 10)}/${parseInt(m[2], 10)}`;
+  }
+
+  function setNoteState(noteEl, state, text) {
+    noteEl.classList.remove("hidden", "busy", "ok", "err");
+    if (state) noteEl.classList.add(state);
+    noteEl.textContent = text;
+  }
+
+  function wireOcr(node, btnSel, inputSel, noteSel, mode, applyFn) {
+    const btn = $(btnSel, node);
+    const input = $(inputSel, node);
+    const noteEl = $(noteSel, node);
+    btn.addEventListener("click", () => input.click());
+    input.addEventListener("change", async () => {
+      const file = input.files[0];
+      if (!file) return;
+      btn.disabled = true;
+      setNoteState(noteEl, "busy", "辨識中…");
+      try {
+        const fd = new FormData();
+        fd.append("photo", file);
+        fd.append("mode", mode);
+        const resp = await fetch("/api/ocr", { method: "POST", body: fd });
+        const j = await resp.json().catch(() => null);
+        if (!resp.ok) throw new Error((j && j.detail) || `辨識失敗（${resp.status}）`);
+        applyFn(j);
+        const parts = [j["說明"], j["金額"] ? `${j["金額"]} 元` : "", mode === "trip" ? `類別：${j["類別"]}` : ""].filter(Boolean);
+        setNoteState(noteEl, "ok", `已回填：${parts.join("　")}（請確認金額正確，可手動修正）`);
+      } catch (err) {
+        setNoteState(noteEl, "err", "辨識失敗：" + err.message + "，請手動輸入。");
+      } finally {
+        btn.disabled = false;
+        input.value = ""; // 立刻捨棄照片參照，不留存
+      }
+    });
+  }
+
   // ---------- 出差明細列 ----------
   function addRow() {
     state.rowCount += 1;
@@ -120,6 +168,22 @@
       applyRoute(node, idx === "" ? null : state.routes[idx]);
     });
 
+    wireOcr(node, ".r_ocrBtn", ".r_ocrInput", ".r_ocrNote", "trip", (result) => {
+      const cls = ROW_CATEGORY_FIELD[result["類別"]] || "r_other";
+      const amountInput = $("." + cls, node);
+      const existing = numOrBlank(amountInput.value) || 0;
+      amountInput.value = existing + (result["金額"] || 0);
+
+      const dateFrom = $(".r_dateFrom", node);
+      const short = shortDate(result["日期"]);
+      if (!dateFrom.value.trim() && short) dateFrom.value = short;
+
+      const noteInput = $(".r_note", node);
+      if (result["說明"]) {
+        noteInput.value = noteInput.value.trim() ? `${noteInput.value.trim()}、${result["說明"]}` : result["說明"];
+      }
+    });
+
     rowsList.appendChild(node);
   }
   $("#addRowBtn").addEventListener("click", addRow);
@@ -133,6 +197,16 @@
       node.remove();
       renumber(itemsList, "item-entry");
     });
+
+    wireOcr(node, ".i_ocrBtn", ".i_ocrInput", ".i_ocrNote", "general", (result) => {
+      const amountInput = $(".i_amount", node);
+      const existing = numOrBlank(amountInput.value) || 0;
+      amountInput.value = existing + (result["金額"] || 0);
+
+      const descInput = $(".i_desc", node);
+      if (!descInput.value.trim() && result["說明"]) descInput.value = result["說明"];
+    });
+
     itemsList.appendChild(node);
   }
   $("#addItemBtn").addEventListener("click", addItem);

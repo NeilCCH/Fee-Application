@@ -154,7 +154,7 @@
 </main>
 
 <footer class="foot">
-  <p>收據照片僅於當下辨識、不儲存不上傳；送件請自行附上單據正本。</p>
+  <p>收據照片僅用於當下辨識（傳送至辨識服務判讀金額/日期），辨識完立即捨棄、不寫入伺服器儲存；送件請自行附上單據正本。</p>
 </footer>
 
 <template id="rowTemplate">
@@ -167,6 +167,11 @@
       <select class="r_route"><option value="">－ 不使用常用路線 －</option></select>
     </label>
     <p class="calc-note r_calcNote hidden"></p>
+
+    <button type="button" class="btn-ocr r_ocrBtn">📷 拍照辨識收據（自動回填金額，可再修正）</button>
+    <input type="file" class="r_ocrInput hidden" accept="image/*" capture="environment" />
+    <p class="ocr-note r_ocrNote hidden"></p>
+
     <div class="grid2">
       <label>日期起 <input type="text" class="r_dateFrom" placeholder="9/1" /></label>
       <label>日期迄 <input type="text" class="r_dateTo" placeholder="9/2" /></label>
@@ -195,6 +200,10 @@
       <strong>項次 <span class="entry-index"></span></strong>
       <button type="button" class="btn-remove">刪除</button>
     </div>
+    <button type="button" class="btn-ocr i_ocrBtn">📷 拍照辨識收據（自動回填金額，可再修正）</button>
+    <input type="file" class="i_ocrInput hidden" accept="image/*" capture="environment" />
+    <p class="ocr-note i_ocrNote hidden"></p>
+
     <div class="grid2">
       <label>說明 <input type="text" class="i_desc" placeholder="招待客戶餐敘（宴請 5 位）" /></label>
       <label>金額 <input type="number" class="i_amount" min="0" placeholder="3200" /></label>
