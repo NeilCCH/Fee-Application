@@ -5,7 +5,7 @@
   const $ = (sel, root = document) => root.querySelector(sel);
   const $$ = (sel, root = document) => Array.from(root.querySelectorAll(sel));
 
-  const state = { mode: null, rowCount: 0, itemCount: 0 };
+  const state = { mode: null, rowCount: 0, itemCount: 0, routes: [] };
 
   const modeSection = $("#modeSection");
   const mainForm = $("#mainForm");
@@ -38,7 +38,8 @@
 
   // ---------- 模式切換 ----------
   $$(".mode-btn").forEach(btn => {
-    btn.addEventListener("click", () => {
+    btn.addEventListener("click", async () => {
+      await state.routesReady;
       state.mode = btn.dataset.mode;
       $$(".mode-btn").forEach(b => b.classList.toggle("selected", b === btn));
       modeSection.classList.add("hidden");
@@ -68,6 +69,35 @@
     $("#summaryCustomWrap").classList.toggle("hidden", e.target.value !== "其他");
   });
 
+  // ---------- 常用路線（供出差明細列的里程試算預設值） ----------
+  async function loadRoutes() {
+    try {
+      const resp = await fetch("/api/routes");
+      if (!resp.ok) return;
+      const j = await resp.json();
+      state.routes = j.routes || [];
+    } catch (e) { /* 常用路線非必要，讀取失敗仍可手動填寫 */ }
+  }
+
+  function applyRoute(node, route) {
+    const noteEl = $(".r_calcNote", node);
+    if (!route) {
+      noteEl.classList.add("hidden");
+      noteEl.textContent = "";
+      return;
+    }
+    const [locFrom, locTo] = (route["名稱"] || "").split("↔");
+    if (locFrom) $(".r_locFrom", node).value = locFrom;
+    if (locTo) $(".r_locTo", node).value = locTo;
+    if (route["油資"] != null) $(".r_fuel", node).value = route["油資"];
+    if (route["國道通行費"] != null) $(".r_toll", node).value = route["國道通行費"];
+    noteEl.textContent =
+      `試算：來回 ${route["來回里程"]} km × 5 元＝${route["油資"]} 元` +
+      (route["國道來回里程"] ? `；國道來回約 ${route["國道來回里程"]} km → 通行費 ${route["國道通行費"]} 元` : "（無國道）") +
+      "。金額欄位仍可手動修正。";
+    noteEl.classList.remove("hidden");
+  }
+
   // ---------- 出差明細列 ----------
   function addRow() {
     state.rowCount += 1;
@@ -77,6 +107,19 @@
       node.remove();
       renumber(rowsList, "row-entry");
     });
+
+    const routeSelect = $(".r_route", node);
+    state.routes.forEach((r, i) => {
+      const opt = document.createElement("option");
+      opt.value = i;
+      opt.textContent = r["名稱"] || `路線 ${i + 1}`;
+      routeSelect.appendChild(opt);
+    });
+    routeSelect.addEventListener("change", () => {
+      const idx = routeSelect.value;
+      applyRoute(node, idx === "" ? null : state.routes[idx]);
+    });
+
     rowsList.appendChild(node);
   }
   $("#addRowBtn").addEventListener("click", addRow);
@@ -128,13 +171,17 @@
       return row;
     });
 
+    const locFrom = $("#t_locationFrom").value.trim();
+    const locTo = $("#t_locationTo").value.trim();
+    const location = locFrom && locTo ? `${locFrom}→${locTo}` : (locFrom || locTo);
+
     return {
       "出差人姓名": $("#f_name").value.trim(),
       "部門": $("#f_dept").value.trim(),
       "職稱": $("#f_title").value.trim(),
       "申請日期": $("#f_applyDate").value,
       "出差事由": $("#t_reason").value.trim(),
-      "出差地點": $("#t_location").value.trim(),
+      "出差地點": location,
       "出差起日": $("#t_startDate").value,
       "出差起時": $("#t_startTime").value.trim(),
       "出差迄日": $("#t_endDate").value,
@@ -246,4 +293,5 @@
   $("#f_applyDate").value = `${today.getFullYear()}-${pad(today.getMonth() + 1)}-${pad(today.getDate())}`;
 
   loadProfile();
+  state.routesReady = loadRoutes();
 })();

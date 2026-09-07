@@ -74,12 +74,15 @@
     <!-- 出差模式欄位 -->
     <section class="card tripOnly hidden">
       <h2>3. 出差資訊</h2>
+      <label>出差事由
+        <input type="text" id="t_reason" placeholder="台南通訊處輔導" />
+      </label>
       <div class="grid2">
-        <label>出差事由
-          <input type="text" id="t_reason" placeholder="台南通訊處輔導" />
+        <label>出發地
+          <input type="text" id="t_locationFrom" placeholder="高雄" />
         </label>
-        <label>出差地點
-          <input type="text" id="t_location" placeholder="高雄→台南" />
+        <label>目的地
+          <input type="text" id="t_locationTo" placeholder="台南" />
         </label>
         <label>出差起日<span class="req">＊</span>
           <input type="date" id="t_startDate" />
@@ -147,6 +150,10 @@
       <strong>第 <span class="entry-index"></span> 趟</strong>
       <button type="button" class="btn-remove">刪除</button>
     </div>
+    <label>從常用路線選取（自動帶出里程試算，金額仍可手動修正）
+      <select class="r_route"><option value="">－ 不使用常用路線 －</option></select>
+    </label>
+    <p class="calc-note r_calcNote hidden"></p>
     <div class="grid2">
       <label>日期起 <input type="text" class="r_dateFrom" placeholder="9/1" /></label>
       <label>日期迄 <input type="text" class="r_dateTo" placeholder="9/2" /></label>
