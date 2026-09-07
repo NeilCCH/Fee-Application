@@ -16,12 +16,12 @@ import zipfile
 from pathlib import Path
 from typing import Any
 
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, File, Form, HTTPException, UploadFile
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
-from pydantic import BaseModel, Field
 
 import fill_forms
+from attachment import build_mileage_attachment, to_pil_image
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 TEMPLATES_DIR = BASE_DIR / "templates"
@@ -40,31 +40,40 @@ def get_routes():
     return json.loads(ROUTES_JSON.read_text(encoding="utf-8"))
 
 
-class GenerateRequest(BaseModel):
-    mode: str = Field(..., description="trip=出差模式 / general=一般費用模式")
-    data: dict[str, Any] = Field(..., description="組裝好的 data.json 內容")
-
-
 @app.post("/api/generate")
-def generate(req: GenerateRequest):
-    if req.mode not in ("trip", "general"):
+async def generate(
+    payload: str = Form(..., description="JSON 字串：{mode, data}"),
+    map_file: UploadFile | None = File(None, description="點對點地圖電子檔（圖片或PDF，選填）"),
+    toll_file: UploadFile | None = File(None, description="國道收費電子檔（圖片或PDF，選填）"),
+):
+    try:
+        req = json.loads(payload)
+    except (TypeError, ValueError) as e:
+        raise HTTPException(400, "payload 不是合法的 JSON") from e
+
+    mode = req.get("mode")
+    if mode not in ("trip", "general"):
         raise HTTPException(400, "mode 必須是 trip 或 general")
     if not TPL_XLS.exists() or not TPL_DOCX.exists():
         raise HTTPException(500, "找不到官方表單範本，請確認 templates 目錄")
 
-    data = dict(req.data or {})
-    _validate(req.mode, data)
+    data = dict(req.get("data") or {})
+    _validate(mode, data)
 
     workdir = Path(tempfile.mkdtemp(prefix="feeapp_"))
     outdir = workdir / "out"
     outdir.mkdir(parents=True, exist_ok=True)
 
     try:
-        if req.mode == "trip":
+        if mode == "trip":
             xls_out, grand = fill_forms.fill_excel(str(TPL_XLS), data, str(outdir))
         else:
             grand = sum(int(it.get("金額", 0) or 0) for it in data.get("請款明細", []))
         fill_forms.fill_word(str(TPL_DOCX), data, grand, str(outdir))
+        await _attach_mileage_pdf(map_file, toll_file, outdir)
+    except HTTPException:
+        shutil.rmtree(workdir, ignore_errors=True)
+        raise
     except Exception as e:  # noqa: BLE001 - 交給前端顯示錯誤訊息
         shutil.rmtree(workdir, ignore_errors=True)
         raise HTTPException(500, f"產檔失敗：{e}") from e
@@ -81,6 +90,28 @@ def generate(req: GenerateRequest):
         filename=filename,
         background=_cleanup(workdir),
     )
+
+
+async def _attach_mileage_pdf(
+    map_file: UploadFile | None, toll_file: UploadFile | None, outdir: Path
+) -> None:
+    """把上傳的地圖／國道收費電子檔合併成一張 A4 PDF，附加進 outdir（不嵌入 xls/docx）。"""
+
+    async def _load(f: UploadFile | None, label: str):
+        if f is None or not f.filename:
+            return None
+        raw = await f.read()
+        if not raw:
+            return None
+        try:
+            return to_pil_image(raw, f.content_type or "")
+        except Exception as e:  # noqa: BLE001
+            raise HTTPException(400, f"{label}無法讀取，請確認是圖片或 PDF 檔：{e}") from e
+
+    map_img = await _load(map_file, "里程地圖電子檔")
+    toll_img = await _load(toll_file, "國道收費電子檔")
+    if map_img or toll_img:
+        build_mileage_attachment(map_img, toll_img, str(outdir / "里程證明.pdf"))
 
 
 def _validate(mode: str, data: dict[str, Any]) -> None:

@@ -120,6 +120,19 @@
       </div>
     </section>
 
+    <section class="card tripOnly hidden">
+      <h2>5. 里程／國道收費附件（選填）</h2>
+      <p class="hint">上傳點對點地圖、國道收費證明的截圖或 PDF，會另外合併成一張 A4 附件與表單一起下載（不會印在報告表或請款單裡）。只有地圖沒有國道收費也可以，屆時只印地圖。</p>
+      <div class="grid2">
+        <label>里程地圖電子檔
+          <input type="file" id="t_mapFile" accept="image/*,application/pdf" />
+        </label>
+        <label>國道收費電子檔
+          <input type="file" id="t_tollFile" accept="image/*,application/pdf" />
+        </label>
+      </div>
+    </section>
+
     <!-- 一般費用模式欄位 -->
     <section class="card generalOnly hidden">
       <h2>3. 請款項次（逐筆列出，超過 7 筆自動分頁）</h2>
@@ -128,7 +141,7 @@
     </section>
 
     <section class="card">
-      <h2>5. 產出</h2>
+      <h2>產出</h2>
       <p class="hint">送出後將自動組成資料並產生官方表單檔案（.xls／.docx），下載後請自行附上單據正本送件。</p>
       <div id="errorBox" class="error hidden"></div>
       <button type="submit" class="btn-primary" id="submitBtn">產生表單並下載</button>

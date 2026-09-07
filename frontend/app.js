@@ -239,11 +239,20 @@
     submitBtn.disabled = true;
     submitBtn.innerHTML = '<span class="spinner"></span>產生中…（需轉檔，約數秒）';
 
+    const form = new FormData();
+    form.append("payload", JSON.stringify({ mode: state.mode, data }));
+    let hasAttachment = false;
+    if (state.mode === "trip") {
+      const mapFile = $("#t_mapFile")?.files[0];
+      const tollFile = $("#t_tollFile")?.files[0];
+      if (mapFile) { form.append("map_file", mapFile); hasAttachment = true; }
+      if (tollFile) { form.append("toll_file", tollFile); hasAttachment = true; }
+    }
+
     try {
       const resp = await fetch("/api/generate", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ mode: state.mode, data }),
+        body: form,
       });
 
       if (!resp.ok) {
@@ -270,11 +279,16 @@
       a.remove();
       setTimeout(() => URL.revokeObjectURL(url), 5000);
 
+      const contents = [
+        state.mode === "trip" ? "出差旅費報告表_已填.xls" : null,
+        "請款單_已填.docx",
+        hasAttachment ? "里程證明.pdf（地圖／國道收費合併附件）" : null,
+      ].filter(Boolean).join(" ＋ ");
       resultBox.innerHTML = `
         <p class="result-title">✅ 已產出並開始下載</p>
         <p class="result-summary">
           檔名：<b>${filename}</b><br/>
-          內含：${state.mode === "trip" ? "出差旅費報告表_已填.xls ＋ 請款單_已填.docx" : "請款單_已填.docx"}<br/>
+          內含：${contents}<br/>
           送件前請自行附上單據正本。
         </p>`;
       resultBox.classList.remove("hidden");
