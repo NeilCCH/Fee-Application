@@ -59,9 +59,19 @@ uvicorn app:app --host 0.0.0.0 --port 8000
 - `POST /api/ocr`：JSON 解析與欄位對應邏輯已用假回應驗證（含格式錯亂、非 JSON 的錯誤情況）；缺少 `ANTHROPIC_API_KEY` 時回傳清楚錯誤訊息、不影響其餘功能；瀏覽器端已用 mock 後端驗證成功／失敗兩種情境的回填、疊加金額、狀態顯示皆正常。
 - 表單頁以 Chromium 模擬手機寬度實測：模式切換、必填驗證、明細新增/刪除、送出下載、成功訊息皆正常。
 
-## 部署注意事項
+## 部署方式（最省錢／最簡單）
 
-- 需要能跑 **LibreOffice（Writer + Calc）** 的環境，建議用 Docker 打包（純 serverless function 平台通常裝不下/ 太慢，不建議）。
-- 拍照 OCR 需設定 `ANTHROPIC_API_KEY` 環境變數（勿寫死或 commit 進版控）。
-- 目前**沒有登入驗證機制**，任何拿到網址的人都能使用；若後續要收斂存取範圍，需自行加上驗證層。
-- 沒有資料庫，「首頁列表／草稿」功能若要做，需另外加簡易儲存（如 SQLite）。
+已附上根目錄 `Dockerfile`（Python 3.11-slim + LibreOffice Writer/Calc + CJK 字型）。因為此表單不含機密資料、不需要登入機制，最簡單便宜的路徑：
+
+1. **Zeabur**（推薦，台灣團隊做的平台）或 **Railway**：GitHub repo 接上去、自動偵測 Dockerfile 建置部署，免費／每月幾美元額度即可跑這種小型內部工具，自動配 HTTPS 網域，不用自己管伺服器。
+2. **Render** 免費方案：完全免費，但閒置一段時間會休眠，下次有人用時要等三、五十秒喚醒——內部工具偶爾用的話可接受。
+3. 若公司已有自己的 VM／虛擬主機：`docker build` 後 `docker run -p 8000:8000 -e ANTHROPIC_API_KEY=xxx feeapp` 即可，前面接 nginx/Caddy 做 HTTPS。
+
+部署時只需設定一個環境變數 `ANTHROPIC_API_KEY`（拍照 OCR 用；沒設定其他功能仍正常，只有拍照辨識會顯示錯誤訊息）。
+
+> Dockerfile 內容已對照這次在本機驗證過的安裝步驟（`libreoffice-writer` + `libreoffice-calc` 缺一會讓轉檔全部失敗，已踩過這個坑），但這個沙盒環境的網路政策擋掉了 Docker Hub 的映像檔下載，沒辦法在這裡實際跑一次 `docker build` 驗證——建議你部署時第一次跑完整流程，確認出檔正常再正式上線。
+
+## 其他注意事項
+
+- 目前**沒有登入驗證機制**，任何拿到網址的人都能使用（你已確認這是可接受的，因為不是機密資料）。
+- 沒有資料庫，「首頁列表／草稿」（開發順序第 4 步）若要做，需另外加簡易儲存（如 SQLite）。
