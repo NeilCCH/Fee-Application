@@ -20,4 +20,5 @@ ENV HOME=/tmp
 WORKDIR /app/backend
 
 EXPOSE 8000
-CMD ["uvicorn", "app:app", "--host", "0.0.0.0", "--port", "8000"]
+# Render/Railway 等平台會用 $PORT 環境變數指定實際對外的埠號，本機沒設定時預設 8000
+CMD ["sh", "-c", "uvicorn app:app --host 0.0.0.0 --port ${PORT:-8000}"]
