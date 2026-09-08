@@ -9,206 +9,159 @@
 <body>
 <header class="topbar">
   <h1>公勝保險 差旅／費用報帳</h1>
-  <p class="sub">表單填寫 → 自動產出官方表單（出差旅費報告表 ／ 請款單）</p>
+  <p class="sub">先個別記錄出差明細／費用，要送件時再挑選、合併成一份 PDF</p>
 </header>
 
 <main class="container">
 
-  <!-- 步驟 1：選模式 -->
-  <section class="card" id="modeSection">
-    <h2>1. 選擇申請類型</h2>
-    <div class="mode-buttons">
-      <button type="button" class="mode-btn" data-mode="trip" id="btnModeTrip">
-        <span class="mode-icon">🧳</span>
-        <span class="mode-title">出差報帳</span>
-        <span class="mode-desc">出差旅費報告表 ＋ 請款單</span>
-      </button>
-      <button type="button" class="mode-btn" data-mode="general" id="btnModeGeneral">
-        <span class="mode-icon">🧾</span>
-        <span class="mode-title">一般費用</span>
-        <span class="mode-desc">交際費／文康費／雜支 → 只填請款單</span>
-      </button>
+  <section class="card">
+    <h2>1. 基本資料</h2>
+    <div class="grid2">
+      <label>姓名（收款人）<span class="req">＊</span>
+        <input type="text" id="f_name" placeholder="陳志明" />
+      </label>
+      <label>部門<span class="req">＊</span>
+        <input type="text" id="f_dept" placeholder="高雄業務中心" />
+      </label>
+      <label>職稱
+        <input type="text" id="f_title" placeholder="經理" />
+      </label>
+    </div>
+    <p class="hint">姓名用來辨認「我的草稿」（換人使用時記得改成自己的名字，才不會看到別人存的）。</p>
+  </section>
+
+  <section class="card">
+    <h2>2. 新增一筆出差明細（一趟＝一筆）</h2>
+    <label>從常用路線選取（自動帶出里程試算，金額仍可手動修正）
+      <select id="leg_route"><option value="">－ 不使用常用路線 －</option></select>
+    </label>
+    <p class="calc-note hidden" id="leg_calcNote"></p>
+
+    <button type="button" class="btn-ocr" id="leg_ocrBtn">📷 拍照辨識收據（自動回填金額，可再修正）</button>
+    <input type="file" class="hidden" id="leg_ocrInput" accept="image/*" capture="environment" />
+    <p class="ocr-note hidden" id="leg_ocrNote"></p>
+
+    <div class="grid2">
+      <label>日期起 <input type="text" id="leg_dateFrom" placeholder="9/1" /></label>
+      <label>日期迄 <input type="text" id="leg_dateTo" placeholder="9/2" /></label>
+      <label>地點起 <input type="text" id="leg_locFrom" placeholder="高雄" /></label>
+      <label>地點迄 <input type="text" id="leg_locTo" placeholder="台南" /></label>
+    </div>
+    <div class="grid3 amounts">
+      <label>火車／高鐵 <input type="number" id="leg_train" min="0" /></label>
+      <label>計程車 <input type="number" id="leg_taxi" min="0" /></label>
+      <label>自用車油 <input type="number" id="leg_fuel" min="0" /></label>
+      <label>自用車通行 <input type="number" id="leg_toll" min="0" /></label>
+      <label>飛機 <input type="number" id="leg_flight" min="0" /></label>
+      <label>交通其他 <input type="number" id="leg_otherTransit" min="0" /></label>
+      <label>住宿費 <input type="number" id="leg_hotel" min="0" /></label>
+      <label>膳雜費 <input type="number" id="leg_meal" min="0" /></label>
+      <label>交際費 <input type="number" id="leg_social" min="0" /></label>
+      <label>其他 <input type="number" id="leg_other" min="0" /></label>
+    </div>
+    <label>該趟摘要 <input type="text" id="leg_note" placeholder="自駕來回90km×5、住宿一晚" /></label>
+    <div id="legError" class="error hidden"></div>
+    <button type="button" class="btn-add" id="addLegBtn">＋ 存這筆出差明細</button>
+  </section>
+
+  <section class="card">
+    <h2>3. 新增一筆費用項次（交際費／文康費／雜支…）</h2>
+    <div class="grid2">
+      <label>費用類別<span class="req">＊</span>
+        <select id="item_category">
+          <option value="交際費">交際費</option>
+          <option value="文康費">文康費</option>
+          <option value="雜支">雜支</option>
+          <option value="其他">其他（自訂，請於說明欄註明）</option>
+        </select>
+      </label>
+      <label>日期
+        <input type="text" id="item_date" placeholder="9/10" />
+      </label>
+    </div>
+
+    <button type="button" class="btn-ocr" id="item_ocrBtn">📷 拍照辨識收據（自動回填金額，可再修正）</button>
+    <input type="file" class="hidden" id="item_ocrInput" accept="image/*" capture="environment" />
+    <p class="ocr-note hidden" id="item_ocrNote"></p>
+
+    <div class="grid2">
+      <label>說明<span class="req">＊</span>
+        <input type="text" id="item_desc" placeholder="招待客戶餐敘（宴請 5 位）" />
+      </label>
+      <label>金額<span class="req">＊</span>
+        <input type="number" id="item_amount" min="0" placeholder="3200" />
+      </label>
+    </div>
+    <div id="itemError" class="error hidden"></div>
+    <button type="button" class="btn-add" id="addItemBtn">＋ 存這筆費用</button>
+  </section>
+
+  <section class="card">
+    <h2>4. 草稿清單（勾選這次要放進請款單的）</h2>
+    <p class="hint">草稿會存著，這次沒勾的下次還在；勾選並成功產出後，這些草稿會自動清除。</p>
+    <div id="draftListBox">
+      <p class="hint" id="draftEmptyHint">先填姓名，草稿清單就會出現在這裡。</p>
+    </div>
+    <button type="button" class="btn-secondary" id="refreshDraftsBtn">↻ 重新整理清單</button>
+  </section>
+
+  <section class="card">
+    <h2>5. 這次送件的共同資訊</h2>
+    <div class="grid2">
+      <label>申請日期<span class="req">＊</span>
+        <input type="date" id="c_applyDate" />
+      </label>
+      <label id="c_reasonWrap" class="hidden">出差事由
+        <input type="text" id="c_reason" placeholder="南區巡迴輔導" />
+      </label>
+    </div>
+    <label id="c_summaryWrap">交易摘要<span class="req req_summary hidden">＊</span>（若本次含出差，留空會自動帶入「出差旅費－出差事由」）
+      <input type="text" id="c_summary" placeholder="例：交際費" />
+    </label>
+    <div class="grid2">
+      <label>預支旅費
+        <input type="number" id="c_advance" min="0" placeholder="0" />
+      </label>
+      <label>備註
+        <input type="text" id="c_note" placeholder="" />
+      </label>
+    </div>
+
+    <div id="attachWrap" class="hidden">
+      <p class="hint">上傳點對點地圖、國道收費證明的截圖或 PDF，會另外合併成 PDF 的最後一頁附件（只有地圖沒有國道收費也可以）。</p>
+      <div class="grid2">
+        <label>里程地圖電子檔
+          <input type="file" id="c_mapFile" accept="image/*,application/pdf" />
+        </label>
+        <label>國道收費電子檔
+          <input type="file" id="c_tollFile" accept="image/*,application/pdf" />
+        </label>
+      </div>
     </div>
   </section>
 
-  <!-- 步驟 2：表單 -->
-  <form id="mainForm" class="hidden">
-
-    <section class="card">
-      <h2>2. 基本資料</h2>
-      <div class="grid2">
-        <label>姓名（收款人）<span class="req">＊</span>
-          <input type="text" id="f_name" required placeholder="陳志明" />
-        </label>
-        <label>部門<span class="req">＊</span>
-          <input type="text" id="f_dept" required placeholder="高雄業務中心" />
-        </label>
-        <label>職稱
-          <input type="text" id="f_title" placeholder="經理" />
-        </label>
-        <label>申請日期<span class="req">＊</span>
-          <input type="date" id="f_applyDate" required />
-        </label>
-      </div>
-
-      <div id="generalSummaryWrap" class="hidden">
-        <div class="grid2">
-          <label>費用類別<span class="req">＊</span>
-            <select id="f_summarySelect">
-              <option value="交際費">交際費</option>
-              <option value="文康費">文康費</option>
-              <option value="雜支">雜支</option>
-              <option value="其他">其他（自訂）</option>
-            </select>
-          </label>
-          <label id="summaryCustomWrap" class="hidden">自訂類別名稱
-            <input type="text" id="f_summaryCustom" placeholder="例：教育訓練費" />
-          </label>
-        </div>
-        <label>摘要補充說明（選填，會接在類別後面）
-          <input type="text" id="f_summaryNote" placeholder="例：客戶餐敘" />
-        </label>
-      </div>
-    </section>
-
-    <!-- 出差模式欄位 -->
-    <section class="card tripOnly hidden">
-      <h2>3. 出差資訊</h2>
-      <label>出差事由
-        <input type="text" id="t_reason" placeholder="台南通訊處輔導" />
-      </label>
-      <div class="grid2">
-        <label>出發地
-          <input type="text" id="t_locationFrom" placeholder="高雄" />
-        </label>
-        <label>目的地
-          <input type="text" id="t_locationTo" placeholder="台南" />
-        </label>
-        <label>出差起日<span class="req">＊</span>
-          <input type="date" id="t_startDate" />
-        </label>
-        <label>起時（時）
-          <input type="number" id="t_startTime" min="0" max="23" placeholder="8" />
-        </label>
-        <label>出差迄日<span class="req">＊</span>
-          <input type="date" id="t_endDate" />
-        </label>
-        <label>迄時（時）
-          <input type="number" id="t_endTime" min="0" max="23" placeholder="18" />
-        </label>
-        <label>共幾日
-          <input type="number" id="t_days" min="0" placeholder="2" />
-        </label>
-        <label>共幾時
-          <input type="number" id="t_hours" min="0" max="23" placeholder="0" />
-        </label>
-      </div>
-    </section>
-
-    <section class="card tripOnly hidden">
-      <h2>4. 出差明細（一趟＝一列，最多 9 列）</h2>
-      <div id="rowsList"></div>
-      <button type="button" class="btn-add" id="addRowBtn">＋ 新增一趟</button>
-
-      <div class="grid2" style="margin-top:16px">
-        <label>預支旅費
-          <input type="number" id="t_advance" min="0" placeholder="0" />
-        </label>
-        <label>備註
-          <input type="text" id="t_note" placeholder="" />
-        </label>
-      </div>
-    </section>
-
-    <section class="card tripOnly hidden">
-      <h2>5. 里程／國道收費附件（選填）</h2>
-      <p class="hint">上傳點對點地圖、國道收費證明的截圖或 PDF，會另外合併成一張 A4 附件與表單一起下載（不會印在報告表或請款單裡）。只有地圖沒有國道收費也可以，屆時只印地圖。</p>
-      <div class="grid2">
-        <label>里程地圖電子檔
-          <input type="file" id="t_mapFile" accept="image/*,application/pdf" />
-        </label>
-        <label>國道收費電子檔
-          <input type="file" id="t_tollFile" accept="image/*,application/pdf" />
-        </label>
-      </div>
-    </section>
-
-    <!-- 一般費用模式欄位 -->
-    <section class="card generalOnly hidden">
-      <h2>3. 請款項次（逐筆列出，超過 7 筆自動分頁）</h2>
-      <div id="itemsList"></div>
-      <button type="button" class="btn-add" id="addItemBtn">＋ 新增項次</button>
-    </section>
-
-    <section class="card">
-      <h2>產出</h2>
-      <p class="hint">送出後將自動組成資料並產生官方表單檔案（.xls／.docx），下載後請自行附上單據正本送件。</p>
-      <div id="errorBox" class="error hidden"></div>
-      <button type="submit" class="btn-primary" id="submitBtn">產生表單並下載</button>
-      <button type="button" class="btn-secondary" id="backBtn">← 重新選擇類型</button>
-    </section>
-  </form>
-
-  <section class="card hidden" id="resultBox">
+  <section class="card">
+    <h2>6. 預覽 ／ 產出</h2>
+    <div id="errorBox" class="error hidden"></div>
+    <button type="button" class="btn-primary" id="previewBtn">預覽這次要送出的內容</button>
+    <div id="previewBox" class="hidden"></div>
+    <button type="button" class="btn-primary hidden" id="generateBtn">確認無誤，產生 PDF</button>
   </section>
+
+  <section class="card hidden" id="resultBox"></section>
 </main>
 
 <footer class="foot">
   <p>收據照片僅用於當下辨識（傳送至辨識服務判讀金額/日期），辨識完立即捨棄、不寫入伺服器儲存；送件請自行附上單據正本。</p>
 </footer>
 
-<template id="rowTemplate">
-  <div class="entry-card row-entry">
-    <div class="entry-head">
-      <strong>第 <span class="entry-index"></span> 趟</strong>
-      <button type="button" class="btn-remove">刪除</button>
-    </div>
-    <label>從常用路線選取（自動帶出里程試算，金額仍可手動修正）
-      <select class="r_route"><option value="">－ 不使用常用路線 －</option></select>
-    </label>
-    <p class="calc-note r_calcNote hidden"></p>
-
-    <button type="button" class="btn-ocr r_ocrBtn">📷 拍照辨識收據（自動回填金額，可再修正）</button>
-    <input type="file" class="r_ocrInput hidden" accept="image/*" capture="environment" />
-    <p class="ocr-note r_ocrNote hidden"></p>
-
-    <div class="grid2">
-      <label>日期起 <input type="text" class="r_dateFrom" placeholder="9/1" /></label>
-      <label>日期迄 <input type="text" class="r_dateTo" placeholder="9/2" /></label>
-      <label>地點起 <input type="text" class="r_locFrom" placeholder="高雄" /></label>
-      <label>地點迄 <input type="text" class="r_locTo" placeholder="台南" /></label>
-    </div>
-    <div class="grid3 amounts">
-      <label>火車／高鐵 <input type="number" class="r_train" min="0" /></label>
-      <label>計程車 <input type="number" class="r_taxi" min="0" /></label>
-      <label>自用車油 <input type="number" class="r_fuel" min="0" /></label>
-      <label>自用車通行 <input type="number" class="r_toll" min="0" /></label>
-      <label>飛機 <input type="number" class="r_flight" min="0" /></label>
-      <label>交通其他 <input type="number" class="r_otherTransit" min="0" /></label>
-      <label>住宿費 <input type="number" class="r_hotel" min="0" /></label>
-      <label>膳雜費 <input type="number" class="r_meal" min="0" /></label>
-      <label>交際費 <input type="number" class="r_social" min="0" /></label>
-      <label>其他 <input type="number" class="r_other" min="0" /></label>
-    </div>
-    <label>該趟摘要 <input type="text" class="r_note" placeholder="自駕來回90km×5、住宿一晚" /></label>
-  </div>
-</template>
-
-<template id="itemTemplate">
-  <div class="entry-card item-entry">
-    <div class="entry-head">
-      <strong>項次 <span class="entry-index"></span></strong>
-      <button type="button" class="btn-remove">刪除</button>
-    </div>
-    <button type="button" class="btn-ocr i_ocrBtn">📷 拍照辨識收據（自動回填金額，可再修正）</button>
-    <input type="file" class="i_ocrInput hidden" accept="image/*" capture="environment" />
-    <p class="ocr-note i_ocrNote hidden"></p>
-
-    <div class="grid2">
-      <label>說明 <input type="text" class="i_desc" placeholder="招待客戶餐敘（宴請 5 位）" /></label>
-      <label>金額 <input type="number" class="i_amount" min="0" placeholder="3200" /></label>
-    </div>
-  </div>
+<template id="draftLegTemplate">
+  <label class="draft-row">
+    <input type="checkbox" class="draft-check" />
+    <span class="draft-label"></span>
+    <span class="draft-amount"></span>
+    <button type="button" class="draft-del" title="刪除這筆草稿">×</button>
+  </label>
 </template>
 
 <script src="app.js"></script>
