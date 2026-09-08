@@ -29,16 +29,8 @@ TEMPLATES_DIR = BASE_DIR / "templates"
 FRONTEND_DIR = BASE_DIR / "frontend"
 TPL_XLS = TEMPLATES_DIR / "出差旅費報告表_範本.xls"
 TPL_DOCX = TEMPLATES_DIR / "請款單_範本.docx"
-ROUTES_JSON = BASE_DIR / "routes.json"
 
 app = FastAPI(title="公勝保險報帳工具")
-
-
-@app.get("/api/routes")
-def get_routes():
-    if not ROUTES_JSON.exists():
-        return {"base": {}, "routes": []}
-    return json.loads(ROUTES_JSON.read_text(encoding="utf-8"))
 
 
 # ---------- 草稿 CRUD ----------

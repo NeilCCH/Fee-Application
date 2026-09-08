@@ -7,7 +7,6 @@
   const $$ = (sel, root = document) => Array.from(root.querySelectorAll(sel));
 
   const state = {
-    routes: [],
     tripLegs: [],       // 目前伺服器上的出差明細草稿
     expenseItems: [],    // 目前伺服器上的費用項次草稿
     selectedLegIds: new Set(),
@@ -38,43 +37,11 @@
 
   function ownerName() { return $("#f_name").value.trim(); }
 
-  // ---------- 常用路線 ----------
-  async function loadRoutes() {
-    try {
-      const resp = await fetch("/api/routes");
-      if (!resp.ok) return;
-      const j = await resp.json();
-      state.routes = j.routes || [];
-      const sel = $("#leg_route");
-      state.routes.forEach((r, i) => {
-        const opt = document.createElement("option");
-        opt.value = i;
-        opt.textContent = r["名稱"] || `路線 ${i + 1}`;
-        sel.appendChild(opt);
-      });
-    } catch (e) { /* 常用路線非必要 */ }
-  }
-
-  $("#leg_route").addEventListener("change", (e) => {
-    const idx = e.target.value;
-    const noteEl = $("#leg_calcNote");
-    const route = idx === "" ? null : state.routes[idx];
-    if (!route) {
-      noteEl.classList.add("hidden");
-      noteEl.textContent = "";
-      return;
-    }
-    const [locFrom, locTo] = (route["名稱"] || "").split("↔");
-    if (locFrom) $("#leg_locFrom").value = locFrom;
-    if (locTo) $("#leg_locTo").value = locTo;
-    if (route["油資"] != null) $("#leg_fuel").value = route["油資"];
-    if (route["國道通行費"] != null) $("#leg_toll").value = route["國道通行費"];
-    noteEl.textContent =
-      `試算：來回 ${route["來回里程"]} km × 5 元＝${route["油資"]} 元` +
-      (route["國道來回里程"] ? `；國道來回約 ${route["國道來回里程"]} km → 通行費 ${route["國道通行費"]} 元` : "（無國道）") +
-      "。金額欄位仍可手動修正。";
-    noteEl.classList.remove("hidden");
-  });
+  const ROW_CATEGORY_FIELD = {
+    "火車高鐵": "leg_train", "計程車": "leg_taxi", "自用車油": "leg_fuel", "自用車通行": "leg_toll",
+    "飛機": "leg_flight", "交通其他": "leg_otherTransit", "住宿費": "leg_hotel", "膳雜費": "leg_meal",
+    "交際費": "leg_social", "其他": "leg_other",
+  };
 
   function numOrBlank(v) {
     if (v === "" || v === null || v === undefined) return "";
@@ -121,8 +88,6 @@
       $$("#addLegBtn").forEach(() => {});
       ["leg_dateFrom", "leg_dateTo", "leg_locFrom", "leg_locTo", "leg_note"].forEach(id => $("#" + id).value = "");
       Object.values(ROW_CATEGORY_FIELD).forEach(id => $("#" + id).value = "");
-      $("#leg_route").value = "";
-      $("#leg_calcNote").classList.add("hidden");
       await refreshDrafts();
     } catch (err) {
       showFieldError($("#legError"), err.message);
@@ -393,7 +358,6 @@
   $("#c_applyDate").value = `${today.getFullYear()}-${pad(today.getMonth() + 1)}-${pad(today.getDate())}`;
 
   loadProfile();
-  loadRoutes();
   refreshDrafts();
   updateTripDependentUI();
 })();

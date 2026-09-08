@@ -4,7 +4,7 @@
 
 「建議開發順序」進度：
 1. ✅ 表單頁 + data.json 組裝 + fill_forms.py 產檔
-2. ✅ 常用路線選取（自動帶出里程試算，可手動修正）
+2. ❌ 常用路線選取 — 已實作（單一下拉，後來試做成高鐵訂票式起訖雙選單）又拿掉，決定出差地點一律手動輸入
 3. ❌ 拍照 OCR 回填 — 已實作又拿掉，實測辨識準確度不夠，決定金額一律手動輸入（key-in）
 4. ✅ 草稿系統（取代原本的「首頁列表」構想，改成更符合實際送件方式的設計，見下）
 
@@ -38,16 +38,14 @@ APP 自己的 favicon（瀏覽器分頁圖示，跟官方表單上的公司 logo
 
 ```
 backend/        FastAPI 服務
-  app.py          路由：草稿 CRUD、/api/preview（預覽）、/api/generate（合併產出PDF）、
-                  /api/routes（常用路線）
-  fill_forms.py   填表引擎（原樣沿用，未修改）
+  app.py          路由：草稿 CRUD、/api/preview（預覽）、/api/generate（合併產出PDF）
+  fill_forms.py   填表引擎（核心邏輯沿用 SPEC，僅因新需求調整過每頁項次列數與換頁門檻，見下）
   db.py           Supabase 草稿存取層
   combine.py      把挑選的草稿＋共同資訊組成 data，呼叫 fill_forms 產檔後轉 PDF 合併
   attachment.py   地圖／國道收費電子檔 -> 合併 A4 PDF 頁面
 db/schema.sql   Supabase 建表 SQL（feeapp_ 前綴，可跟其他專案共用同一個 Supabase 專案不互相干擾）
 frontend/       表單頁（純 HTML/CSS/JS，無建置流程）
 templates/      官方空白範本（出差旅費報告表.xls、請款單.docx）
-routes.json     常用路線資料庫（里程為估計值，正式使用前建議用 Google Maps 校正）
 SPEC.md         完整規格文件
 ```
 

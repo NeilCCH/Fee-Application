@@ -175,16 +175,6 @@ input:focus, select:focus {
 
 .hint { font-size: 0.82rem; color: var(--muted); margin-top: 0; }
 
-.calc-note {
-  font-size: 0.78rem;
-  color: var(--navy);
-  background: #f0f4fa;
-  border: 1px solid #d7e0ee;
-  border-radius: 8px;
-  padding: 8px 10px;
-  margin: -4px 0 12px;
-}
-
 .draft-row {
   display: flex;
   align-items: center;
