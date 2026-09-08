@@ -41,17 +41,30 @@
       <label>地點起 <input type="text" id="leg_locFrom" placeholder="高雄" /></label>
       <label>地點迄 <input type="text" id="leg_locTo" placeholder="台南" /></label>
     </div>
-    <div class="grid3 amounts">
-      <label>火車／高鐵 <input type="number" id="leg_train" min="0" /></label>
-      <label>計程車 <input type="number" id="leg_taxi" min="0" /></label>
-      <label>自用車油 <input type="number" id="leg_fuel" min="0" /></label>
-      <label>自用車通行 <input type="number" id="leg_toll" min="0" /></label>
-      <label>飛機 <input type="number" id="leg_flight" min="0" /></label>
-      <label>交通其他 <input type="number" id="leg_otherTransit" min="0" /></label>
-      <label>住宿費 <input type="number" id="leg_hotel" min="0" /></label>
-      <label>膳雜費 <input type="number" id="leg_meal" min="0" /></label>
-      <label>交際費 <input type="number" id="leg_social" min="0" /></label>
-      <label>其他 <input type="number" id="leg_other" min="0" /></label>
+    <div class="amt-group cat-transport">
+      <p class="amt-group-title">交通</p>
+      <div class="grid3 amounts">
+        <label>火車／高鐵 <input type="number" id="leg_train" min="0" /></label>
+        <label>計程車 <input type="number" id="leg_taxi" min="0" /></label>
+        <label>自用車油 <input type="number" id="leg_fuel" min="0" /></label>
+        <label>自用車通行 <input type="number" id="leg_toll" min="0" /></label>
+        <label>飛機 <input type="number" id="leg_flight" min="0" /></label>
+        <label>交通其他 <input type="number" id="leg_otherTransit" min="0" /></label>
+      </div>
+    </div>
+    <div class="amt-group cat-stay">
+      <p class="amt-group-title">住宿／膳雜</p>
+      <div class="grid3 amounts">
+        <label>住宿費 <input type="number" id="leg_hotel" min="0" /></label>
+        <label>膳雜費 <input type="number" id="leg_meal" min="0" /></label>
+      </div>
+    </div>
+    <div class="amt-group cat-social">
+      <p class="amt-group-title">交際／其他</p>
+      <div class="grid3 amounts">
+        <label>交際費 <input type="number" id="leg_social" min="0" /></label>
+        <label>其他 <input type="number" id="leg_other" min="0" /></label>
+      </div>
     </div>
     <label>該趟摘要 <input type="text" id="leg_note" placeholder="自駕來回90km×5、住宿一晚" /></label>
     <div id="legError" class="error hidden"></div>
@@ -60,19 +73,19 @@
 
   <section class="card">
     <h2>3. 新增一筆費用項次（交際費／文康費／雜支…）</h2>
-    <div class="grid2">
-      <label>費用類別<span class="req">＊</span>
-        <select id="item_category">
-          <option value="交際費">交際費</option>
-          <option value="文康費">文康費</option>
-          <option value="雜支">雜支</option>
-          <option value="其他">其他（自訂，請於說明欄註明）</option>
-        </select>
-      </label>
-      <label>日期
-        <input type="text" id="item_date" placeholder="9/10" />
-      </label>
+    <label>費用類別<span class="req">＊</span></label>
+    <div class="cat-pills" id="item_category_pills">
+      <button type="button" class="cat-pill cat-social selected" data-value="交際費">交際費</button>
+      <button type="button" class="cat-pill cat-rec" data-value="文康費">文康費</button>
+      <button type="button" class="cat-pill cat-misc" data-value="雜支">雜支</button>
+      <button type="button" class="cat-pill cat-other" data-value="其他">其他</button>
     </div>
+    <input type="hidden" id="item_category" value="交際費" />
+    <p class="hint">選「其他」的話，請在下面說明欄註明實際項目。</p>
+
+    <label>日期
+      <input type="text" id="item_date" placeholder="9/10" />
+    </label>
 
     <div class="grid2">
       <label>說明<span class="req">＊</span>

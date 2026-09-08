@@ -43,11 +43,36 @@
     "交際費": "leg_social", "其他": "leg_other",
   };
 
+  // 費用類別 -> 配色 class（跟 style.css 的 .cat-* 對應），用來讓草稿清單／預覽視覺上區分類別
+  const CATEGORY_CLASS = {
+    "出差": "cat-trip",
+    "交際費": "cat-social",
+    "文康費": "cat-rec",
+    "雜支": "cat-misc",
+    "其他": "cat-other",
+  };
+
   function numOrBlank(v) {
     if (v === "" || v === null || v === undefined) return "";
     const n = Number(v);
     return Number.isFinite(n) ? n : "";
   }
+
+  function escapeHtml(s) {
+    return String(s == null ? "" : s).replace(/[&<>"']/g, (c) => (
+      { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]
+    ));
+  }
+
+  // ---------- 費用類別選擇（彩色按鈕） ----------
+  const categoryPillsBox = $("#item_category_pills");
+  function selectCategoryPill(value) {
+    $$(".cat-pill", categoryPillsBox).forEach(b => b.classList.toggle("selected", b.dataset.value === value));
+    $("#item_category").value = value;
+  }
+  $$(".cat-pill", categoryPillsBox).forEach(btn => {
+    btn.addEventListener("click", () => selectCategoryPill(btn.dataset.value));
+  });
 
   // ---------- 新增出差明細草稿 ----------
   function showFieldError(el, msg) {
@@ -123,7 +148,7 @@
         throw new Error((j && j.detail) || `存檔失敗（${resp.status}）`);
       }
       ["item_date", "item_desc", "item_amount"].forEach(id => $("#" + id).value = "");
-      $("#item_category").value = "交際費";
+      selectCategoryPill("交際費");
       await refreshDrafts();
     } catch (err) {
       showFieldError($("#itemError"), err.message);
@@ -177,7 +202,7 @@
     return Object.values(leg.amounts || {}).reduce((s, v) => s + (Number(v) || 0), 0);
   }
   function itemLabel(item) {
-    return `${item.category || ""} ${item.item_date || ""} ${item.description || ""}`.replace(/\s+/g, " ").trim();
+    return `${item.item_date || ""} ${item.description || ""}`.replace(/\s+/g, " ").trim();
   }
 
   function renderDraftList() {
@@ -196,6 +221,7 @@
         legLabel(leg), legAmount(leg), state.selectedLegIds.has(leg.id),
         (checked) => checked ? state.selectedLegIds.add(leg.id) : state.selectedLegIds.delete(leg.id),
         async () => { await fetch(`/api/drafts/trip-leg/${leg.id}`, { method: "DELETE" }); await refreshDrafts(); },
+        "cat-trip", "出差",
       )));
     }
     if (state.expenseItems.length) {
@@ -207,17 +233,20 @@
         itemLabel(item), Number(item.amount) || 0, state.selectedItemIds.has(item.id),
         (checked) => checked ? state.selectedItemIds.add(item.id) : state.selectedItemIds.delete(item.id),
         async () => { await fetch(`/api/drafts/expense-item/${item.id}`, { method: "DELETE" }); await refreshDrafts(); },
+        CATEGORY_CLASS[item.category] || "cat-other", item.category || "其他",
       )));
     }
   }
 
   const draftTemplate = $("#draftLegTemplate");
-  function buildDraftRow(label, amount, checked, onToggle, onDelete) {
+  function buildDraftRow(label, amount, checked, onToggle, onDelete, catClass, badgeText) {
     const node = draftTemplate.content.firstElementChild.cloneNode(true);
+    if (catClass) node.classList.add(catClass);
     const check = $(".draft-check", node);
     check.checked = checked;
     check.addEventListener("change", () => { onToggle(check.checked); updateTripDependentUI(); });
-    $(".draft-label", node).textContent = label;
+    const badge = badgeText ? `<span class="cat-badge">${escapeHtml(badgeText)}</span>` : "";
+    $(".draft-label", node).innerHTML = badge + escapeHtml(label);
     $(".draft-amount", node).textContent = amount ? `$${amount.toLocaleString()}` : "";
     $(".draft-del", node).addEventListener("click", (e) => { e.preventDefault(); e.stopPropagation(); onDelete(); });
     return node;
@@ -290,7 +319,10 @@
   });
 
   function renderPreview(p) {
-    const lines = p["項次"].map(it => `<div class="line"><span>${it["說明"]}</span><span>${it["金額"].toLocaleString()}</span></div>`).join("");
+    const lines = p["項次"].map(it => {
+      const cls = CATEGORY_CLASS[it["類別"]] || "cat-other";
+      return `<div class="line ${cls}"><span class="desc"><span class="dot"></span><span>${escapeHtml(it["說明"])}</span></span><span>${it["金額"].toLocaleString()}</span></div>`;
+    }).join("");
     $("#previewBox").innerHTML = `
       <div class="preview-box">
         ${lines}

@@ -58,7 +58,7 @@ def _expense_line(item: dict[str, Any]) -> dict[str, Any]:
     desc = str(item.get("description") or "").strip()
     label = f"{date} {desc}".strip() if date else desc
     amount = item.get("amount", 0) or 0
-    return {"說明": label, "金額": int(round(float(amount)))}
+    return {"說明": label, "金額": int(round(float(amount))), "類別": item.get("category") or "其他"}
 
 
 def build_preview(common: dict[str, Any], trip_legs: list[dict], expense_items: list[dict]) -> dict[str, Any]:
@@ -72,7 +72,7 @@ def build_preview(common: dict[str, Any], trip_legs: list[dict], expense_items: 
     if trip_legs:
         start, end = _trip_date_range(trip_legs)
         desc = f"{_fmt_md(start)}到{_fmt_md(end)}差旅費" if start and end else "差旅費"
-        lines.append({"說明": desc, "金額": trip_total})
+        lines.append({"說明": desc, "金額": trip_total, "類別": "出差"})
     for item in expense_items:
         lines.append(_expense_line(item))
 
@@ -124,7 +124,7 @@ def generate_combined_pdf(
         xls_out, grand = fill_forms.fill_excel(tpl_xls, data, outdir)
         start, end = _trip_date_range(trip_legs)
         desc = f"{_fmt_md(start)}到{_fmt_md(end)}差旅費" if start and end else "差旅費"
-        trip_line = {"說明": desc, "金額": round(grand)}
+        trip_line = {"說明": desc, "金額": round(grand), "類別": "出差"}
         xls_pdf = fill_forms.libre_convert(xls_out, "pdf", outdir)
         pdf_parts.append(xls_pdf)
     else:
