@@ -176,7 +176,7 @@ def _total_row_idx(t):
     for idx, row in enumerate(t.rows):
         if row.cells[0].text.strip().startswith("總計"):
             return list(range(4, idx)), idx
-    return list(range(4, 10)), 10
+    return list(range(4, 12)), 12
 
 def _check_payment(t, method):
     """把付款方式的 □{method} 勾成 ■{method}"""
@@ -225,8 +225,8 @@ def fill_word(template_docx, data, grand, outdir):
     items = data.get("請款明細") or [{"說明": _default_desc, "金額": grand}]
     total = sum(int(it.get("金額",0) or 0) for it in items) if items else grand
     n = len(items)
-    # 每頁標準6、上限7；<=7 放一頁，>7 每頁6筆自動換頁
-    pages = [items] if n <= 7 else [items[i:i+6] for i in range(0, n, 6)]
+    # 每頁上限8；<=8 放一頁，>8 每頁8筆自動換頁（配合範本已調整為8列版面）
+    pages = [items] if n <= 8 else [items[i:i+8] for i in range(0, n, 8)]
 
     def fill_header(t):
         _set_cell_text(t.cell(0,2), data.get("交易摘要") or ("出差旅費－" + data.get("出差事由","")))
