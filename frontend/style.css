@@ -185,30 +185,6 @@ input:focus, select:focus {
   margin: -4px 0 12px;
 }
 
-.btn-ocr {
-  width: 100%;
-  padding: 10px;
-  border-radius: 8px;
-  border: 1.5px solid var(--gold);
-  background: #fffaf0;
-  color: #7a5a12;
-  font-weight: 600;
-  font-size: 0.85rem;
-  cursor: pointer;
-  margin-bottom: 10px;
-}
-.btn-ocr:disabled { opacity: 0.6; cursor: wait; }
-
-.ocr-note {
-  font-size: 0.78rem;
-  border-radius: 8px;
-  padding: 8px 10px;
-  margin: -2px 0 12px;
-}
-.ocr-note.ok { color: #1e6b3c; background: #eaf7ee; border: 1px solid #bfe6cc; }
-.ocr-note.err { color: var(--danger); background: #fdecea; border: 1px solid #f2c1bb; }
-.ocr-note.busy { color: var(--muted); background: #f2f3f5; border: 1px solid var(--border); }
-
 .draft-row {
   display: flex;
   align-items: center;

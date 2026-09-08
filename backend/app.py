@@ -41,21 +41,6 @@ def get_routes():
     return json.loads(ROUTES_JSON.read_text(encoding="utf-8"))
 
 
-@app.post("/api/ocr")
-async def ocr(photo: UploadFile = File(...), mode: str = Form("trip")):
-    """收據拍照辨識：照片只在記憶體處理，這裡讀完 bytes 就不再持有檔案，辨識完即丟、不落地存檔。"""
-    from ocr import OcrError, recognize_receipt
-
-    raw = await photo.read()
-    try:
-        result = recognize_receipt(raw, photo.content_type or "", mode)
-    except OcrError as e:
-        raise HTTPException(400, str(e)) from e
-    finally:
-        del raw
-    return result
-
-
 # ---------- 草稿 CRUD ----------
 
 @app.post("/api/drafts/trip-leg")

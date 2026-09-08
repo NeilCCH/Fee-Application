@@ -37,10 +37,6 @@
     </label>
     <p class="calc-note hidden" id="leg_calcNote"></p>
 
-    <button type="button" class="btn-ocr" id="leg_ocrBtn">📷 拍照辨識收據（自動回填金額，可再修正）</button>
-    <input type="file" class="hidden" id="leg_ocrInput" accept="image/*" capture="environment" />
-    <p class="ocr-note hidden" id="leg_ocrNote"></p>
-
     <div class="grid2">
       <label>日期起 <input type="text" id="leg_dateFrom" placeholder="9/1" /></label>
       <label>日期迄 <input type="text" id="leg_dateTo" placeholder="9/2" /></label>
@@ -79,10 +75,6 @@
         <input type="text" id="item_date" placeholder="9/10" />
       </label>
     </div>
-
-    <button type="button" class="btn-ocr" id="item_ocrBtn">📷 拍照辨識收據（自動回填金額，可再修正）</button>
-    <input type="file" class="hidden" id="item_ocrInput" accept="image/*" capture="environment" />
-    <p class="ocr-note hidden" id="item_ocrNote"></p>
 
     <div class="grid2">
       <label>說明<span class="req">＊</span>
@@ -152,7 +144,7 @@
 </main>
 
 <footer class="foot">
-  <p>收據照片僅用於當下辨識（傳送至辨識服務判讀金額/日期），辨識完立即捨棄、不寫入伺服器儲存；送件請自行附上單據正本。</p>
+  <p>送件請自行附上單據正本。</p>
 </footer>
 
 <template id="draftLegTemplate">

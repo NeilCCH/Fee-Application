@@ -5,5 +5,4 @@ openpyxl
 python-docx
 Pillow
 PyMuPDF
-anthropic
 supabase

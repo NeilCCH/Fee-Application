@@ -76,76 +76,11 @@
     noteEl.classList.remove("hidden");
   });
 
-  // ---------- 拍照 OCR ----------
-  function setNoteState(noteEl, state_, text) {
-    noteEl.classList.remove("hidden", "busy", "ok", "err");
-    if (state_) noteEl.classList.add(state_);
-    noteEl.textContent = text;
-  }
-
-  function wireOcr(btn, input, noteEl, mode, applyFn) {
-    btn.addEventListener("click", () => input.click());
-    input.addEventListener("change", async () => {
-      const file = input.files[0];
-      if (!file) return;
-      btn.disabled = true;
-      setNoteState(noteEl, "busy", "辨識中…");
-      try {
-        const fd = new FormData();
-        fd.append("photo", file);
-        fd.append("mode", mode);
-        const resp = await fetch("/api/ocr", { method: "POST", body: fd });
-        const j = await resp.json().catch(() => null);
-        if (!resp.ok) throw new Error((j && j.detail) || `辨識失敗（${resp.status}）`);
-        applyFn(j);
-        const parts = [j["說明"], j["金額"] ? `${j["金額"]} 元` : "", mode === "trip" ? `類別：${j["類別"]}` : ""].filter(Boolean);
-        setNoteState(noteEl, "ok", `已回填：${parts.join("　")}（請確認金額正確，可手動修正）`);
-      } catch (err) {
-        setNoteState(noteEl, "err", "辨識失敗：" + err.message + "，請手動輸入。");
-      } finally {
-        btn.disabled = false;
-        input.value = ""; // 立刻捨棄照片參照，不留存
-      }
-    });
-  }
-
-  const ROW_CATEGORY_FIELD = {
-    "火車高鐵": "leg_train", "計程車": "leg_taxi", "自用車油": "leg_fuel", "自用車通行": "leg_toll",
-    "飛機": "leg_flight", "交通其他": "leg_otherTransit", "住宿費": "leg_hotel", "膳雜費": "leg_meal",
-    "交際費": "leg_social", "其他": "leg_other",
-  };
   function numOrBlank(v) {
     if (v === "" || v === null || v === undefined) return "";
     const n = Number(v);
     return Number.isFinite(n) ? n : "";
   }
-  function shortDate(s) {
-    const m = String(s).match(/(\d+)[\/-](\d+)(?:[\/-](\d+))?/);
-    if (!m) return "";
-    return m[3] ? `${parseInt(m[2], 10)}/${parseInt(m[3], 10)}` : `${parseInt(m[1], 10)}/${parseInt(m[2], 10)}`;
-  }
-
-  wireOcr($("#leg_ocrBtn"), $("#leg_ocrInput"), $("#leg_ocrNote"), "trip", (result) => {
-    const id = ROW_CATEGORY_FIELD[result["類別"]] || "leg_other";
-    const input = $("#" + id);
-    const existing = numOrBlank(input.value) || 0;
-    input.value = existing + (result["金額"] || 0);
-    const dateFrom = $("#leg_dateFrom");
-    const short = shortDate(result["日期"]);
-    if (!dateFrom.value.trim() && short) dateFrom.value = short;
-    const noteInput = $("#leg_note");
-    if (result["說明"]) {
-      noteInput.value = noteInput.value.trim() ? `${noteInput.value.trim()}、${result["說明"]}` : result["說明"];
-    }
-  });
-
-  wireOcr($("#item_ocrBtn"), $("#item_ocrInput"), $("#item_ocrNote"), "general", (result) => {
-    const amountInput = $("#item_amount");
-    const existing = numOrBlank(amountInput.value) || 0;
-    amountInput.value = existing + (result["金額"] || 0);
-    const descInput = $("#item_desc");
-    if (!descInput.value.trim() && result["說明"]) descInput.value = result["說明"];
-  });
 
   // ---------- 新增出差明細草稿 ----------
   function showFieldError(el, msg) {
