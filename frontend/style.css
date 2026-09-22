@@ -93,6 +93,7 @@ label {
   font-size: 0.85rem;
   color: var(--muted);
   margin-bottom: 12px;
+  min-width: 0;
 }
 input, select {
   font-size: 0.95rem;
@@ -102,6 +103,8 @@ input, select {
   color: var(--text);
   background: #fff;
   width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
 }
 input:focus, select:focus {
   outline: none;
@@ -118,6 +121,11 @@ input:focus, select:focus {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 0 14px;
+}
+@media (max-width: 400px) {
+  /* 窄螢幕手機（iPhone SE/mini 等）：日期選擇器等原生元件寬度縮不下去時，
+     改單欄避免跟旁邊欄位擠在一起重疊 */
+  .grid2 { grid-template-columns: 1fr; }
 }
 @media (min-width: 560px) {
   .grid3 { grid-template-columns: 1fr 1fr 1fr; }
