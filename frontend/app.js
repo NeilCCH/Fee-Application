@@ -376,6 +376,7 @@
       $("#previewBox").classList.add("hidden");
       $("#generateBtn").classList.add("hidden");
       await refreshDrafts();
+      await loadHistory();
     } catch (err) {
       showError("網路或伺服器錯誤，請稍後再試：" + err.message);
     } finally {
@@ -383,6 +384,50 @@
       btn.textContent = "確認無誤，產生 PDF";
     }
   });
+
+  // ---------- 歷史送件紀錄 ----------
+  async function loadHistory() {
+    const owner = ownerName();
+    const box = $("#historyBox");
+    if (!owner) { box.innerHTML = '<p class="hint">請先在上面填姓名。</p>'; return; }
+    box.innerHTML = '<p class="hint">載入中…</p>';
+    try {
+      const resp = await fetch("/api/submissions?owner_name=" + encodeURIComponent(owner));
+      if (!resp.ok) throw new Error("讀取歷史紀錄失敗");
+      renderHistory(await resp.json());
+    } catch (e) {
+      box.innerHTML = `<p class="error">讀取歷史紀錄失敗：${e.message}</p>`;
+    }
+  }
+
+  function renderHistory(rows) {
+    const box = $("#historyBox");
+    if (!rows || rows.length === 0) {
+      box.innerHTML = '<p class="hint">目前沒有歷史紀錄。</p>';
+      return;
+    }
+    box.innerHTML = rows.map(r => {
+      const when = r.created_at ? new Date(r.created_at).toLocaleString("zh-TW", {
+        year: "numeric", month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit",
+      }) : "";
+      const metaParts = [r.dept, r.summary, r.reason].filter(Boolean).map(escapeHtml);
+      const lines = (r.items || []).map(it => {
+        const cls = CATEGORY_CLASS[it["類別"]] || "cat-other";
+        return `<div class="line ${cls}"><span class="desc"><span class="dot"></span><span>${escapeHtml(it["說明"])}</span></span><span>${Number(it["金額"] || 0).toLocaleString()}</span></div>`;
+      }).join("");
+      return `
+        <div class="history-item">
+          <div class="history-head">
+            <span>${escapeHtml(when)}</span>
+            <span class="history-total">$${Number(r.total_amount || 0).toLocaleString()}</span>
+          </div>
+          <div class="history-meta">${metaParts.join("｜")}</div>
+          <div class="preview-box">${lines}</div>
+        </div>`;
+    }).join("");
+  }
+
+  $("#loadHistoryBtn").addEventListener("click", loadHistory);
 
   // ---------- 初始化 ----------
   const today = new Date();

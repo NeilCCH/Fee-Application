@@ -88,6 +88,17 @@ def delete_expense_item_draft(item_id: str):
     return {"ok": True}
 
 
+@app.get("/api/submissions")
+def list_submissions(owner_name: str):
+    owner = (owner_name or "").strip()
+    if not owner:
+        raise HTTPException(400, "缺少姓名")
+    try:
+        return db.list_submissions(owner)
+    except DbNotConfigured as e:
+        raise HTTPException(500, str(e)) from e
+
+
 # ---------- 預覽與產出 ----------
 
 class SelectionError(HTTPException):
@@ -167,6 +178,11 @@ async def generate(
     except Exception as e:  # noqa: BLE001 - 交給前端顯示錯誤訊息
         shutil.rmtree(workdir, ignore_errors=True)
         raise HTTPException(500, f"產檔失敗：{e}") from e
+
+    try:
+        db.create_submission_log(common, combine.build_preview(common, trip_legs, expense_items))
+    except Exception:
+        pass  # 留紀錄失敗不影響本次產出下載，之後查不到這筆也只是少一筆歷史紀錄
 
     try:
         db.delete_drafts(

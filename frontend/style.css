@@ -302,6 +302,24 @@ input:focus, select:focus {
 .preview-box .line .desc span:last-child { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .preview-box .total { font-weight: 700; color: var(--navy); border-top: 1px dashed #c7d3e6; margin-top: 8px; padding-top: 8px; }
 
+.history-item {
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 12px 14px 2px;
+  margin-bottom: 12px;
+  background: #fafbfd;
+}
+.history-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.82rem;
+  color: var(--muted);
+}
+.history-total { font-weight: 700; color: var(--navy); }
+.history-meta { font-size: 0.85rem; color: var(--text); margin-top: 2px; }
+.history-item .preview-box { margin: 10px 0 12px; background: #fff; border-color: var(--border); }
+
 .error {
   background: #fdecea;
   border: 1px solid var(--danger);

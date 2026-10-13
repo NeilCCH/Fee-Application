@@ -2,13 +2,16 @@
 """
 Supabase 草稿存取層：出差明細（一趟＝一列）與一般費用項次，各自先存起來，
 送件時才挑選要用哪幾筆組成一張請款單。成功產出後即刪除已使用的草稿列
-（資料本來就設計成短命，不需要久放）。
+（資料本來就設計成短命，不需要久放）。另外還有 feeapp_submissions：
+每次成功產出後留一筆文字摘要紀錄（不存 PDF 本身），因為草稿會被刪除，
+這張表是唯一能回頭查「之前送過哪些款」的地方。
 """
 import os
 from typing import Any
 
 TRIP_LEGS_TABLE = "feeapp_trip_legs"
 EXPENSE_ITEMS_TABLE = "feeapp_expense_items"
+SUBMISSIONS_TABLE = "feeapp_submissions"
 
 _client = None
 
@@ -103,3 +106,33 @@ def delete_drafts(trip_leg_ids: list[str], expense_item_ids: list[str]) -> None:
         client.table(TRIP_LEGS_TABLE).delete().in_("id", trip_leg_ids).execute()
     if expense_item_ids:
         client.table(EXPENSE_ITEMS_TABLE).delete().in_("id", expense_item_ids).execute()
+
+
+def create_submission_log(common: dict[str, Any], summary: dict[str, Any]) -> dict[str, Any]:
+    row = {
+        "owner_name": common.get("出差人姓名", ""),
+        "dept": common.get("部門", ""),
+        "apply_date": common.get("申請日期", ""),
+        "reason": common.get("出差事由", ""),
+        "summary": common.get("交易摘要", ""),
+        "trip_count": summary.get("出差筆數", 0),
+        "item_count": summary.get("費用筆數", 0),
+        "total_amount": summary.get("總計", 0),
+        "total_amount_cn": summary.get("總計大寫", ""),
+        "items": summary.get("項次", []),
+    }
+    resp = get_client().table(SUBMISSIONS_TABLE).insert(row).execute()
+    return resp.data[0]
+
+
+def list_submissions(owner_name: str, limit: int = 50) -> list[dict[str, Any]]:
+    resp = (
+        get_client().table(SUBMISSIONS_TABLE)
+        .select("*")
+        .eq("owner_name", owner_name)
+        .order("created_at", desc=True)
+        .limit(limit)
+        .execute()
+    )
+    return resp.data
+
