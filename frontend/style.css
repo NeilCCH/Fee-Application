@@ -124,8 +124,10 @@ input:focus, select:focus {
 }
 @media (max-width: 400px) {
   /* 窄螢幕手機（iPhone SE/mini 等）：日期選擇器等原生元件寬度縮不下去時，
-     改單欄避免跟旁邊欄位擠在一起重疊 */
-  .grid2 { grid-template-columns: 1fr; }
+     改單欄避免跟旁邊欄位擠在一起重疊。只套用在有標記 .stack-narrow 的
+     特定欄位組（目前是申請日期／出差事由），其餘 .grid2（如日期／金額）
+     維持並排，不會被一併拖下去變成上下堆疊 */
+  .grid2.stack-narrow { grid-template-columns: 1fr; }
 }
 @media (min-width: 560px) {
   .grid3 { grid-template-columns: 1fr 1fr 1fr; }
