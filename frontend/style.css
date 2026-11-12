@@ -91,6 +91,7 @@ label {
   flex-direction: column;
   gap: 6px;
   font-size: 0.85rem;
+  line-height: 1.3;
   color: var(--muted);
   margin-bottom: 12px;
   min-width: 0;
@@ -111,7 +112,11 @@ input:focus, select:focus {
   outline: none;
   border-color: var(--navy);
 }
-.req { color: var(--danger); margin-left: 2px; }
+.req {
+  display: contents;  /* 讓這個 span 不要在 label 的 flex column 裡自成一列，
+                          不然必填星號會被擠成獨立一行，把下面的輸入框往下推 */
+  color: var(--danger);
+}
 
 .grid2 {
   display: grid;
