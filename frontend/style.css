@@ -97,7 +97,8 @@ label {
 }
 input, select {
   font-size: 0.95rem;
-  padding: 10px 12px;
+  padding: 0 12px;
+  height: 44px;
   border-radius: 8px;
   border: 1px solid var(--border);
   color: var(--text);
