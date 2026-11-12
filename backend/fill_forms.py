@@ -178,6 +178,59 @@ def _total_row_idx(t):
             return list(range(4, idx)), idx
     return list(range(4, 12)), 12
 
+# 請款單項次表格密度設定（已用 LibreOffice 實際轉檔測試校正過）：
+# - 範本原始字體 14pt／行距 20pt EXACTLY／列高 0.75cm AT_LEAST，10 筆項次
+#   （含表頭4列、總計列、簽名列、現金領款簽收）剛好印滿一張 A4，11 筆就會溢頁。
+# - 超過 10 筆硬要擠進同一頁時，等比例縮小字體/行距/列高；下限抓 8pt，
+#   實測 8pt 時最多還能塞進約 17 筆（字會比較小，仍可閱讀但不建議常態使用）。
+ROWS_PER_PAGE_DEFAULT = 10
+ROWS_PER_PAGE_MAX = 17
+_BASE_FONT_PT, _BASE_LINE_PT, _BASE_ROW_CM = 14, 20, 0.75
+_MIN_FONT_PT = 8
+
+def suggest_page_sizes(n, rows_per_page=ROWS_PER_PAGE_DEFAULT):
+    """依項次筆數回傳建議分頁方式：頁數最少、筆數盡量平均分配。
+    回傳每頁筆數的 list，例如 17 筆 -> [9, 8]。"""
+    if n <= rows_per_page:
+        return [n]
+    k = -(-n // rows_per_page)  # ceil(n / rows_per_page)
+    while True:
+        base_sz, extra = divmod(n, k)
+        sizes = [base_sz + 1 if i < extra else base_sz for i in range(k)]
+        if max(sizes) <= rows_per_page:
+            return sizes
+        k += 1
+
+def page_sizes_for_count(n, desired_pages):
+    """依使用者指定的頁數，把 n 筆盡量平均分配成剛好 desired_pages 頁
+    （可能超過單頁 10 筆的正常容量，由呼叫端決定要不要縮小字體密度）。"""
+    k = max(1, int(desired_pages))
+    base_sz, extra = divmod(n, k)
+    return [base_sz + 1 if i < extra else base_sz for i in range(k)]
+
+def _apply_density(table, row_idxs, tot_idx, count):
+    """單頁項次超過 ROWS_PER_PAGE_DEFAULT 時，等比例縮小項次列與總計列的
+    字體/行距/列高，讓使用者自選頁數時還是能擠進同一頁。"""
+    if count <= ROWS_PER_PAGE_DEFAULT:
+        return
+    from docx.shared import Pt, Cm
+    from docx.enum.table import WD_ROW_HEIGHT_RULE
+    from docx.enum.text import WD_LINE_SPACING
+    scale = ROWS_PER_PAGE_DEFAULT / count
+    font_pt = max(_MIN_FONT_PT, round(_BASE_FONT_PT * scale))
+    line_pt = max(_MIN_FONT_PT + 1, round(_BASE_LINE_PT * scale))
+    row_cm = max(0.3, round(_BASE_ROW_CM * scale, 2))
+    for ridx in list(row_idxs) + [tot_idx]:
+        row = table.rows[ridx]
+        row.height = Cm(row_cm)
+        row.height_rule = WD_ROW_HEIGHT_RULE.AT_LEAST
+        for cell in row.cells:
+            for p in cell.paragraphs:
+                p.paragraph_format.line_spacing_rule = WD_LINE_SPACING.EXACTLY
+                p.paragraph_format.line_spacing = Pt(line_pt)
+                for r in p.runs:
+                    r.font.size = Pt(font_pt)
+
 def _check_payment(t, method):
     """把付款方式的 □{method} 勾成 ■{method}"""
     if not method: return
@@ -191,7 +244,7 @@ def _check_payment(t, method):
                         for x in p.runs[1:]: x.text = ""
                     return
 
-def fill_word(template_docx, data, grand, outdir):
+def fill_word(template_docx, data, grand, outdir, desired_pages=None):
     from docx import Document
     from docx.table import Table
     from docx.oxml import OxmlElement
@@ -227,25 +280,19 @@ def fill_word(template_docx, data, grand, outdir):
     items = data.get("請款明細") or [{"說明": _default_desc, "金額": grand}]
     total = sum(int(it.get("金額",0) or 0) for it in items) if items else grand
     n = len(items)
-    # <=8 放一頁（單頁版面含簽名列，上限經實測固定為8）。
-    # >8 才需要分頁：最後一頁含簽名列，上限一樣是8；其餘頁不含簽名列，
-    # 版面較鬆，上限抓9。頁數算出來後盡量平均分配，而不是每頁硬塞滿，
-    # 例如17筆會分成 9+8 兩頁，而不是 8+8+1 三頁（最後一頁只有1筆很浪費）。
-    if n <= 8:
-        pages = [items]
+    # 未指定頁數：用預設密度（每頁上限10筆，已實測）自動算出最少頁數、盡量平均分配。
+    # 有指定頁數（使用者在「建議分幾頁」自行調整過）：依指定頁數平均分配，
+    # 若因此單頁超過10筆，_apply_density() 會自動縮小該頁字體/行距/列高來擠進去；
+    # 頁數太少導致單頁超過 ROWS_PER_PAGE_MAX（實測密度下限仍會溢頁）則夾到可行的最小頁數。
+    if desired_pages:
+        min_pages = -(-n // ROWS_PER_PAGE_MAX)  # ceil(n / ROWS_PER_PAGE_MAX)
+        sizes = page_sizes_for_count(n, max(1, int(desired_pages), min_pages))
     else:
-        LAST_CAP, PAGE_CAP = 8, 9
-        k = max(2, -(-(n - LAST_CAP) // PAGE_CAP) + 1)  # ceil((n-LAST_CAP)/PAGE_CAP) + 1
-        while True:
-            base_sz, extra = divmod(n, k)
-            sizes = [base_sz + 1 if i < extra else base_sz for i in range(k)]
-            if sizes[-1] <= LAST_CAP and all(s <= PAGE_CAP for s in sizes[:-1]):
-                break
-            k += 1
-        pages, idx = [], 0
-        for s in sizes:
-            pages.append(items[idx:idx+s])
-            idx += s
+        sizes = suggest_page_sizes(n)
+    pages, idx = [], 0
+    for s in sizes:
+        pages.append(items[idx:idx+s])
+        idx += s
 
     def fill_header(t):
         _set_cell_text(t.cell(0,2), data.get("交易摘要") or ("出差旅費－" + data.get("出差事由","")))
@@ -301,6 +348,7 @@ def fill_word(template_docx, data, grand, outdir):
             _set_cell_text(t.cell(tot,7), f"{total:,}")             # 阿拉伯數字
         else:
             _set_cell_text(t.cell(tot,1), "（接次頁）")
+        _apply_density(t, idxs, tot, need)  # 該頁超過預設10筆才會縮小字體/列高
 
     # 多頁時把「現金領款簽收」段落移到最後一頁之後
     if len(pages) > 1:

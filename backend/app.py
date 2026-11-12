@@ -153,6 +153,11 @@ async def generate(
         raise HTTPException(400, "payload 不是合法的 JSON") from e
 
     common, trip_legs, expense_items = _load_selection(req)
+    desired_pages = req.get("desired_pages")
+    try:
+        desired_pages = int(desired_pages) if desired_pages else None
+    except (TypeError, ValueError):
+        desired_pages = None
 
     if not TPL_XLS.exists() or not TPL_DOCX.exists():
         raise HTTPException(500, "找不到官方表單範本，請確認 templates 目錄")
@@ -171,6 +176,7 @@ async def generate(
             str(TPL_XLS), str(TPL_DOCX), str(outdir),
             map_bytes=map_bytes, map_content_type=map_ctype,
             toll_bytes=toll_bytes, toll_content_type=toll_ctype,
+            desired_pages=desired_pages,
         )
     except HTTPException:
         shutil.rmtree(workdir, ignore_errors=True)

@@ -84,6 +84,7 @@ def build_preview(common: dict[str, Any], trip_legs: list[dict], expense_items: 
         "項次": lines,
         "總計": grand,
         "總計大寫": fill_forms.cn_amount_string(grand),
+        "建議頁數": len(fill_forms.suggest_page_sizes(len(lines))) if lines else 1,
     }
 
 
@@ -98,6 +99,7 @@ def generate_combined_pdf(
     map_content_type: str = "",
     toll_bytes: bytes | None = None,
     toll_content_type: str = "",
+    desired_pages: int | None = None,
 ) -> tuple[str, dict[str, Any]]:
     os.makedirs(outdir, exist_ok=True)
     has_trip = len(trip_legs) > 0
@@ -133,7 +135,7 @@ def generate_combined_pdf(
     請款明細 = ([trip_line] if trip_line else []) + [_expense_line(it) for it in expense_items]
     data["請款明細"] = 請款明細
 
-    docx_out = fill_forms.fill_word(tpl_docx, data, grand, outdir)
+    docx_out = fill_forms.fill_word(tpl_docx, data, grand, outdir, desired_pages=desired_pages)
     docx_pdf = fill_forms.libre_convert(docx_out, "pdf", outdir)
     pdf_parts.append(docx_pdf)
 

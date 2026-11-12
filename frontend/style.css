@@ -305,6 +305,27 @@ input:focus, select:focus {
 .preview-box .line .desc span:last-child { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .preview-box .total { font-weight: 700; color: var(--navy); border-top: 1px dashed #c7d3e6; margin-top: 8px; padding-top: 8px; }
 
+.pages-control {
+  margin: -6px 0 12px;
+}
+.pages-control label {
+  flex-direction: row;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 6px;
+}
+.pages-control label > span,
+.pages-control label {
+  font-size: 0.88rem;
+  color: var(--text);
+}
+.pages-control input[type="number"] {
+  width: 70px;
+  flex: none;
+  text-align: center;
+}
+.pages-control .hint { margin: 0; }
+
 .history-item {
   border: 1px solid var(--border);
   border-radius: 10px;

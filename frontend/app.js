@@ -13,6 +13,7 @@
     selectedItemIds: new Set(),
     seenLegIds: new Set(),
     seenItemIds: new Set(),
+    desiredPages: null,  // 請款單要分幾頁；null = 用系統建議的頁數
   };
 
   // ---------- 記住姓名／部門／職稱 ----------
@@ -279,11 +280,13 @@
   }
 
   function selectionPayload() {
-    return {
+    const payload = {
       common: buildCommon(),
       trip_leg_ids: Array.from(state.selectedLegIds),
       expense_item_ids: Array.from(state.selectedItemIds),
     };
+    if (state.desiredPages) payload.desired_pages = state.desiredPages;
+    return payload;
   }
 
   // ---------- 預覽 / 產出 ----------
@@ -323,12 +326,24 @@
       const cls = CATEGORY_CLASS[it["類別"]] || "cat-other";
       return `<div class="line ${cls}"><span class="desc"><span class="dot"></span><span>${escapeHtml(it["說明"])}</span></span><span>${it["金額"].toLocaleString()}</span></div>`;
     }).join("");
+    const suggested = p["建議頁數"] || 1;
+    state.desiredPages = suggested;
     $("#previewBox").innerHTML = `
       <div class="preview-box">
         ${lines}
         <div class="line total"><span>總計（${p["總計大寫"]}）</span><span>$${p["總計"].toLocaleString()}</span></div>
+      </div>
+      <div class="pages-control">
+        <label>請款單要分幾頁？
+          <input type="number" inputmode="numeric" id="desiredPagesInput" min="1" max="20" value="${suggested}" />
+        </label>
+        <p class="hint">系統建議分 ${suggested} 頁（每頁上限約 10 筆、盡量平均分配）。改成較少頁數、項次擠進同一頁較多筆時，該頁文字會自動縮小以維持版面完整。</p>
       </div>`;
     $("#previewBox").classList.remove("hidden");
+    $("#desiredPagesInput").addEventListener("change", (e) => {
+      const v = parseInt(e.target.value, 10);
+      state.desiredPages = (Number.isFinite(v) && v > 0) ? v : suggested;
+    });
   }
 
   $("#generateBtn").addEventListener("click", async () => {
