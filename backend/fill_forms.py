@@ -209,6 +209,8 @@ def fill_word(template_docx, data, grand, outdir):
 
     base = doc.tables[0]
     pristine = copy.deepcopy(base._tbl)  # 乾淨範本，供分頁複製
+    # 表頭文字（公司名稱／請款單／日期）在表格最前面 3 段，續頁要原樣重印一次
+    title_pristine = [copy.deepcopy(doc.paragraphs[i]._p) for i in range(3)]
     method = data.get("付款方式", "電匯")
 
     def _md(s):  # '2025/9/1' -> '9月1日'
@@ -225,8 +227,25 @@ def fill_word(template_docx, data, grand, outdir):
     items = data.get("請款明細") or [{"說明": _default_desc, "金額": grand}]
     total = sum(int(it.get("金額",0) or 0) for it in items) if items else grand
     n = len(items)
-    # 每頁上限8；<=8 放一頁，>8 每頁8筆自動換頁（配合範本已調整為8列版面）
-    pages = [items] if n <= 8 else [items[i:i+8] for i in range(0, n, 8)]
+    # <=8 放一頁（單頁版面含簽名列，上限經實測固定為8）。
+    # >8 才需要分頁：最後一頁含簽名列，上限一樣是8；其餘頁不含簽名列，
+    # 版面較鬆，上限抓9。頁數算出來後盡量平均分配，而不是每頁硬塞滿，
+    # 例如17筆會分成 9+8 兩頁，而不是 8+8+1 三頁（最後一頁只有1筆很浪費）。
+    if n <= 8:
+        pages = [items]
+    else:
+        LAST_CAP, PAGE_CAP = 8, 9
+        k = max(2, -(-(n - LAST_CAP) // PAGE_CAP) + 1)  # ceil((n-LAST_CAP)/PAGE_CAP) + 1
+        while True:
+            base_sz, extra = divmod(n, k)
+            sizes = [base_sz + 1 if i < extra else base_sz for i in range(k)]
+            if sizes[-1] <= LAST_CAP and all(s <= PAGE_CAP for s in sizes[:-1]):
+                break
+            k += 1
+        pages, idx = [], 0
+        for s in sizes:
+            pages.append(items[idx:idx+s])
+            idx += s
 
     def fill_header(t):
         _set_cell_text(t.cell(0,2), data.get("交易摘要") or ("出差旅費－" + data.get("出差事由","")))
@@ -260,6 +279,8 @@ def fill_word(template_docx, data, grand, outdir):
             brk_r.append(brk)
             brk_p.append(brk_r)
             sectPr.addprevious(brk_p)
+            for tp in title_pristine:  # 續頁重印一次表頭文字（公司名稱/請款單/日期）
+                sectPr.addprevious(copy.deepcopy(tp))
             sectPr.addprevious(new_el)
             t = Table(new_el, base._parent)
         fill_header(t)
