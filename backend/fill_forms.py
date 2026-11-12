@@ -249,11 +249,19 @@ def fill_word(template_docx, data, grand, outdir):
         else:
             new_el = copy.deepcopy(pristine)
             sectPr = doc.element.body.find(qn('w:sectPr'))
+            # 插入一個獨立段落、段落裡放真正的分頁符，強制新表格從新頁開始。
+            # 原本用 w:pageBreakBefore 掛在新表格第一格的段落上，LibreOffice
+            # 渲染時不可靠：常常把這個表格的第一列擠進前一頁剩餘空間，
+            # 造成前一頁尾端多印出一段、新頁又重複一次的錯位。
+            brk_p = OxmlElement('w:p')
+            brk_r = OxmlElement('w:r')
+            brk = OxmlElement('w:br')
+            brk.set(qn('w:type'), 'page')
+            brk_r.append(brk)
+            brk_p.append(brk_r)
+            sectPr.addprevious(brk_p)
             sectPr.addprevious(new_el)
             t = Table(new_el, base._parent)
-            fp = t.cell(0,0).paragraphs[0]._p       # 讓續頁表格從新頁開始
-            pPr = fp.get_or_add_pPr()
-            pPr.insert(0, OxmlElement('w:pageBreakBefore'))
         fill_header(t)
         need = len(page_items)
         idxs, tot = ensure_rows(t, need)
