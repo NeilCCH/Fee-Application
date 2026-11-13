@@ -13,7 +13,8 @@
     selectedItemIds: new Set(),
     seenLegIds: new Set(),
     seenItemIds: new Set(),
-    desiredPages: null,  // 請款單要分幾頁；null = 用系統建議的頁數
+    editingLegId: null,   // 非 null 時，新增表單改為「修改」這筆既有草稿
+    editingItemId: null,
   };
 
   // ---------- 記住姓名／部門／職稱 ----------
@@ -37,6 +38,17 @@
   }
 
   function ownerName() { return $("#f_name").value.trim(); }
+
+  // "9/5" 這類月/日格式的排序鍵；解析不出來的（空白／格式錯誤）一律排最後
+  function mdDateKey(s) {
+    const m = /^\s*(\d+)\s*\/\s*(\d+)\s*$/.exec(s || "");
+    if (!m) return [99, 99];
+    return [parseInt(m[1], 10), parseInt(m[2], 10)];
+  }
+  function cmpMdDate(a, b) {
+    const ka = mdDateKey(a), kb = mdDateKey(b);
+    return ka[0] - kb[0] || ka[1] - kb[1];
+  }
 
   const ROW_CATEGORY_FIELD = {
     "火車高鐵": "leg_train", "計程車": "leg_taxi", "自用車油": "leg_fuel", "自用車通行": "leg_toll",
@@ -81,6 +93,35 @@
     el.classList.toggle("hidden", !msg);
   }
 
+  function fillLegForm(leg) {
+    $("#leg_dateFrom").value = leg.date_from || "";
+    $("#leg_dateTo").value = leg.date_to || "";
+    $("#leg_locFrom").value = leg.loc_from || "";
+    $("#leg_locTo").value = leg.loc_to || "";
+    $("#leg_note").value = leg.note || "";
+    const amounts = leg.amounts || {};
+    Object.entries(ROW_CATEGORY_FIELD).forEach(([key, id]) => {
+      $("#" + id).value = amounts[key] != null ? amounts[key] : "";
+    });
+  }
+  function startEditLeg(leg) {
+    state.editingLegId = leg.id;
+    fillLegForm(leg);
+    showFieldError($("#legError"), "");
+    $("#addLegBtn").textContent = "✓ 更新這筆出差明細";
+    $("#cancelLegEditBtn").classList.remove("hidden");
+    $("#legSection").scrollIntoView({ behavior: "smooth", block: "start" });
+  }
+  function cancelEditLeg() {
+    state.editingLegId = null;
+    ["leg_dateFrom", "leg_dateTo", "leg_locFrom", "leg_locTo", "leg_note"].forEach(id => $("#" + id).value = "");
+    Object.values(ROW_CATEGORY_FIELD).forEach(id => $("#" + id).value = "");
+    $("#addLegBtn").textContent = "＋ 存這筆出差明細";
+    $("#cancelLegEditBtn").classList.add("hidden");
+    showFieldError($("#legError"), "");
+  }
+  $("#cancelLegEditBtn").addEventListener("click", cancelEditLeg);
+
   $("#addLegBtn").addEventListener("click", async () => {
     showFieldError($("#legError"), "");
     const owner = ownerName();
@@ -101,19 +142,20 @@
       "地點起": locFrom, "地點迄": locTo, amounts,
       "摘要": $("#leg_note").value.trim(),
     };
+    const editingId = state.editingLegId;
+    const url = editingId ? `/api/drafts/trip-leg/${editingId}` : "/api/drafts/trip-leg";
+    const method = editingId ? "PUT" : "POST";
     const btn = $("#addLegBtn");
     btn.disabled = true;
     try {
-      const resp = await fetch("/api/drafts/trip-leg", {
-        method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body),
+      const resp = await fetch(url, {
+        method, headers: { "Content-Type": "application/json" }, body: JSON.stringify(body),
       });
       if (!resp.ok) {
         const j = await resp.json().catch(() => null);
         throw new Error((j && j.detail) || `存檔失敗（${resp.status}）`);
       }
-      $$("#addLegBtn").forEach(() => {});
-      ["leg_dateFrom", "leg_dateTo", "leg_locFrom", "leg_locTo", "leg_note"].forEach(id => $("#" + id).value = "");
-      Object.values(ROW_CATEGORY_FIELD).forEach(id => $("#" + id).value = "");
+      cancelEditLeg();
       await refreshDrafts();
     } catch (err) {
       showFieldError($("#legError"), err.message);
@@ -123,6 +165,30 @@
   });
 
   // ---------- 新增費用項次草稿 ----------
+  function fillItemForm(item) {
+    $("#item_date").value = item.item_date || "";
+    $("#item_desc").value = item.description || "";
+    $("#item_amount").value = item.amount != null ? item.amount : "";
+    selectCategoryPill(item.category || "交際費");
+  }
+  function startEditItem(item) {
+    state.editingItemId = item.id;
+    fillItemForm(item);
+    showFieldError($("#itemError"), "");
+    $("#addItemBtn").textContent = "✓ 更新這筆費用";
+    $("#cancelItemEditBtn").classList.remove("hidden");
+    $("#itemSection").scrollIntoView({ behavior: "smooth", block: "start" });
+  }
+  function cancelEditItem() {
+    state.editingItemId = null;
+    ["item_date", "item_desc", "item_amount"].forEach(id => $("#" + id).value = "");
+    selectCategoryPill("交際費");
+    $("#addItemBtn").textContent = "＋ 存這筆費用";
+    $("#cancelItemEditBtn").classList.add("hidden");
+    showFieldError($("#itemError"), "");
+  }
+  $("#cancelItemEditBtn").addEventListener("click", cancelEditItem);
+
   $("#addItemBtn").addEventListener("click", async () => {
     showFieldError($("#itemError"), "");
     const owner = ownerName();
@@ -138,18 +204,20 @@
       "說明": desc,
       "金額": amount,
     };
+    const editingId = state.editingItemId;
+    const url = editingId ? `/api/drafts/expense-item/${editingId}` : "/api/drafts/expense-item";
+    const method = editingId ? "PUT" : "POST";
     const btn = $("#addItemBtn");
     btn.disabled = true;
     try {
-      const resp = await fetch("/api/drafts/expense-item", {
-        method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body),
+      const resp = await fetch(url, {
+        method, headers: { "Content-Type": "application/json" }, body: JSON.stringify(body),
       });
       if (!resp.ok) {
         const j = await resp.json().catch(() => null);
         throw new Error((j && j.detail) || `存檔失敗（${resp.status}）`);
       }
-      ["item_date", "item_desc", "item_amount"].forEach(id => $("#" + id).value = "");
-      selectCategoryPill("交際費");
+      cancelEditItem();
       await refreshDrafts();
     } catch (err) {
       showFieldError($("#itemError"), err.message);
@@ -177,6 +245,8 @@
     }
     state.tripLegs = data.trip_legs || [];
     state.expenseItems = data.expense_items || [];
+    state.tripLegs.sort((a, b) => cmpMdDate(a.date_from, b.date_from));
+    state.expenseItems.sort((a, b) => cmpMdDate(a.item_date, b.item_date));
 
     // 新出現的草稿預設勾選；已看過的保留原本勾選狀態
     state.tripLegs.forEach(leg => {
@@ -223,6 +293,7 @@
         (checked) => checked ? state.selectedLegIds.add(leg.id) : state.selectedLegIds.delete(leg.id),
         async () => { await fetch(`/api/drafts/trip-leg/${leg.id}`, { method: "DELETE" }); await refreshDrafts(); },
         "cat-trip", "出差",
+        () => startEditLeg(leg),
       )));
     }
     if (state.expenseItems.length) {
@@ -235,12 +306,13 @@
         (checked) => checked ? state.selectedItemIds.add(item.id) : state.selectedItemIds.delete(item.id),
         async () => { await fetch(`/api/drafts/expense-item/${item.id}`, { method: "DELETE" }); await refreshDrafts(); },
         CATEGORY_CLASS[item.category] || "cat-other", item.category || "其他",
+        () => startEditItem(item),
       )));
     }
   }
 
   const draftTemplate = $("#draftLegTemplate");
-  function buildDraftRow(label, amount, checked, onToggle, onDelete, catClass, badgeText) {
+  function buildDraftRow(label, amount, checked, onToggle, onDelete, catClass, badgeText, onEdit) {
     const node = draftTemplate.content.firstElementChild.cloneNode(true);
     if (catClass) node.classList.add(catClass);
     const check = $(".draft-check", node);
@@ -249,6 +321,7 @@
     const badge = badgeText ? `<span class="cat-badge">${escapeHtml(badgeText)}</span>` : "";
     $(".draft-label", node).innerHTML = badge + escapeHtml(label);
     $(".draft-amount", node).textContent = amount ? `$${amount.toLocaleString()}` : "";
+    $(".draft-edit", node).addEventListener("click", (e) => { e.preventDefault(); e.stopPropagation(); onEdit(); });
     $(".draft-del", node).addEventListener("click", (e) => { e.preventDefault(); e.stopPropagation(); onDelete(); });
     return node;
   }
@@ -280,13 +353,11 @@
   }
 
   function selectionPayload() {
-    const payload = {
+    return {
       common: buildCommon(),
       trip_leg_ids: Array.from(state.selectedLegIds),
       expense_item_ids: Array.from(state.selectedItemIds),
     };
-    if (state.desiredPages) payload.desired_pages = state.desiredPages;
-    return payload;
   }
 
   // ---------- 預覽 / 產出 ----------
@@ -326,24 +397,12 @@
       const cls = CATEGORY_CLASS[it["類別"]] || "cat-other";
       return `<div class="line ${cls}"><span class="desc"><span class="dot"></span><span>${escapeHtml(it["說明"])}</span></span><span>${it["金額"].toLocaleString()}</span></div>`;
     }).join("");
-    const suggested = p["建議頁數"] || 1;
-    state.desiredPages = suggested;
     $("#previewBox").innerHTML = `
       <div class="preview-box">
         ${lines}
         <div class="line total"><span>總計（${p["總計大寫"]}）</span><span>$${p["總計"].toLocaleString()}</span></div>
-      </div>
-      <div class="pages-control">
-        <label>請款單要分幾頁？
-          <input type="number" inputmode="numeric" id="desiredPagesInput" min="1" max="20" value="${suggested}" />
-        </label>
-        <p class="hint">系統建議分 ${suggested} 頁（每頁上限約 10 筆、盡量平均分配）。改成較少頁數、項次擠進同一頁較多筆時，該頁文字會自動縮小以維持版面完整。</p>
       </div>`;
     $("#previewBox").classList.remove("hidden");
-    $("#desiredPagesInput").addEventListener("change", (e) => {
-      const v = parseInt(e.target.value, 10);
-      state.desiredPages = (Number.isFinite(v) && v > 0) ? v : suggested;
-    });
   }
 
   $("#generateBtn").addEventListener("click", async () => {

@@ -59,6 +59,24 @@ def create_expense_item_draft(body: dict[str, Any]):
     return row
 
 
+@app.put("/api/drafts/trip-leg/{leg_id}")
+def update_trip_leg_draft(leg_id: str, body: dict[str, Any]):
+    try:
+        row = db.update_trip_leg(leg_id, body)
+    except DbNotConfigured as e:
+        raise HTTPException(500, str(e)) from e
+    return row
+
+
+@app.put("/api/drafts/expense-item/{item_id}")
+def update_expense_item_draft(item_id: str, body: dict[str, Any]):
+    try:
+        row = db.update_expense_item(item_id, body)
+    except DbNotConfigured as e:
+        raise HTTPException(500, str(e)) from e
+    return row
+
+
 @app.get("/api/drafts")
 def list_drafts(owner_name: str):
     owner = (owner_name or "").strip()
@@ -117,6 +135,7 @@ def _load_selection(payload: dict[str, Any]) -> tuple[dict, list, list]:
         expense_items = db.get_expense_items_by_ids(expense_item_ids)
     except DbNotConfigured as e:
         raise HTTPException(500, str(e)) from e
+    trip_legs, expense_items = combine.sort_selection(trip_legs, expense_items)
     _validate_common(common, has_trip=bool(trip_legs))
     return common, trip_legs, expense_items
 
@@ -153,11 +172,6 @@ async def generate(
         raise HTTPException(400, "payload 不是合法的 JSON") from e
 
     common, trip_legs, expense_items = _load_selection(req)
-    desired_pages = req.get("desired_pages")
-    try:
-        desired_pages = int(desired_pages) if desired_pages else None
-    except (TypeError, ValueError):
-        desired_pages = None
 
     if not TPL_XLS.exists() or not TPL_DOCX.exists():
         raise HTTPException(500, "找不到官方表單範本，請確認 templates 目錄")
@@ -176,7 +190,6 @@ async def generate(
             str(TPL_XLS), str(TPL_DOCX), str(outdir),
             map_bytes=map_bytes, map_content_type=map_ctype,
             toll_bytes=toll_bytes, toll_content_type=toll_ctype,
-            desired_pages=desired_pages,
         )
     except HTTPException:
         shutil.rmtree(workdir, ignore_errors=True)

@@ -59,6 +59,30 @@ def create_expense_item(owner_name: str, item: dict[str, Any]) -> dict[str, Any]
     return resp.data[0]
 
 
+def update_trip_leg(leg_id: str, leg: dict[str, Any]) -> dict[str, Any]:
+    row = {
+        "date_from": leg.get("日期起", ""),
+        "date_to": leg.get("日期迄", ""),
+        "loc_from": leg.get("地點起", ""),
+        "loc_to": leg.get("地點迄", ""),
+        "amounts": leg.get("amounts", {}),
+        "note": leg.get("摘要", ""),
+    }
+    resp = get_client().table(TRIP_LEGS_TABLE).update(row).eq("id", leg_id).execute()
+    return resp.data[0]
+
+
+def update_expense_item(item_id: str, item: dict[str, Any]) -> dict[str, Any]:
+    row = {
+        "category": item.get("類別", "其他"),
+        "item_date": item.get("日期", ""),
+        "description": item.get("說明", ""),
+        "amount": item.get("金額", 0) or 0,
+    }
+    resp = get_client().table(EXPENSE_ITEMS_TABLE).update(row).eq("id", item_id).execute()
+    return resp.data[0]
+
+
 def list_drafts(owner_name: str) -> dict[str, list]:
     client = get_client()
     legs = (

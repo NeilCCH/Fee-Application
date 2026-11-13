@@ -112,6 +112,14 @@ input:focus, select:focus {
   outline: none;
   border-color: var(--navy);
 }
+input[type="number"]::-webkit-outer-spin-button,
+input[type="number"]::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+input[type="number"] {
+  -moz-appearance: textfield;
+}
 .req {
   display: contents;  /* 讓這個 span 不要在 label 的 flex column 裡自成一列，
                           不然必填星號會被擠成獨立一行，把下面的輸入框往下推 */
@@ -278,6 +286,16 @@ input:focus, select:focus {
 }
 .draft-label { flex: 1; min-width: 0; font-size: 0.88rem; color: var(--text); text-align: left; }
 .draft-amount { flex: none; font-weight: 700; color: var(--navy); white-space: nowrap; }
+.draft-edit {
+  flex: none;
+  border: none;
+  background: none;
+  color: var(--navy);
+  font-size: 1rem;
+  line-height: 1;
+  cursor: pointer;
+  padding: 2px 6px;
+}
 .draft-del {
   flex: none;
   border: none;
@@ -309,27 +327,6 @@ input:focus, select:focus {
 .preview-box .line .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--cat, var(--muted)); flex: none; }
 .preview-box .line .desc span:last-child { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .preview-box .total { font-weight: 700; color: var(--navy); border-top: 1px dashed #c7d3e6; margin-top: 8px; padding-top: 8px; }
-
-.pages-control {
-  margin: -6px 0 12px;
-}
-.pages-control label {
-  flex-direction: row;
-  align-items: center;
-  gap: 10px;
-  margin-bottom: 6px;
-}
-.pages-control label > span,
-.pages-control label {
-  font-size: 0.88rem;
-  color: var(--text);
-}
-.pages-control input[type="number"] {
-  width: 70px;
-  flex: none;
-  text-align: center;
-}
-.pages-control .hint { margin: 0; }
 
 .history-item {
   border: 1px solid var(--border);

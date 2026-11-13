@@ -45,6 +45,13 @@ def _leg_to_row(leg: dict[str, Any]) -> dict[str, Any]:
     return row
 
 
+def sort_selection(trip_legs: list[dict], expense_items: list[dict]) -> tuple[list[dict], list[dict]]:
+    """輸入資料一律依單據日期排序，最近發生的在最下面（項次最後）。"""
+    trip_legs = sorted(trip_legs, key=lambda r: _md_key(r.get("date_from")))
+    expense_items = sorted(expense_items, key=lambda r: _md_key(r.get("item_date")))
+    return trip_legs, expense_items
+
+
 def _trip_date_range(trip_legs: list[dict]) -> tuple[str, str]:
     with_start = [leg for leg in trip_legs if leg.get("date_from")]
     with_end = [leg for leg in trip_legs if leg.get("date_to")]
@@ -84,7 +91,6 @@ def build_preview(common: dict[str, Any], trip_legs: list[dict], expense_items: 
         "項次": lines,
         "總計": grand,
         "總計大寫": fill_forms.cn_amount_string(grand),
-        "建議頁數": len(fill_forms.suggest_page_sizes(len(lines))) if lines else 1,
     }
 
 
@@ -99,7 +105,6 @@ def generate_combined_pdf(
     map_content_type: str = "",
     toll_bytes: bytes | None = None,
     toll_content_type: str = "",
-    desired_pages: int | None = None,
 ) -> tuple[str, dict[str, Any]]:
     os.makedirs(outdir, exist_ok=True)
     has_trip = len(trip_legs) > 0
@@ -135,7 +140,7 @@ def generate_combined_pdf(
     請款明細 = ([trip_line] if trip_line else []) + [_expense_line(it) for it in expense_items]
     data["請款明細"] = 請款明細
 
-    docx_out = fill_forms.fill_word(tpl_docx, data, grand, outdir, desired_pages=desired_pages)
+    docx_out = fill_forms.fill_word(tpl_docx, data, grand, outdir)
     docx_pdf = fill_forms.libre_convert(docx_out, "pdf", outdir)
     pdf_parts.append(docx_pdf)
 

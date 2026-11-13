@@ -38,7 +38,7 @@
     <p class="hint">姓名用來辨認「我的草稿」（換人使用時記得改成自己的名字，才不會看到別人存的）。</p>
   </section>
 
-  <section class="card">
+  <section class="card" id="legSection">
     <h2>2. 新增一筆出差明細（一趟＝一筆）</h2>
 
     <div class="grid2">
@@ -75,9 +75,10 @@
     <label>該趟摘要 <input type="text" id="leg_note" placeholder="自駕來回90km×5、住宿一晚" /></label>
     <div id="legError" class="error hidden"></div>
     <button type="button" class="btn-add" id="addLegBtn">＋ 存這筆出差明細</button>
+    <button type="button" class="btn-secondary hidden" id="cancelLegEditBtn">取消編輯，改回新增</button>
   </section>
 
-  <section class="card">
+  <section class="card" id="itemSection">
     <h2>3. 新增一筆費用項次（交際費／文康費／雜支…）</h2>
     <label>費用類別<span class="req">＊</span></label>
     <div class="cat-pills" id="item_category_pills">
@@ -103,6 +104,7 @@
     </div>
     <div id="itemError" class="error hidden"></div>
     <button type="button" class="btn-add" id="addItemBtn">＋ 存這筆費用</button>
+    <button type="button" class="btn-secondary hidden" id="cancelItemEditBtn">取消編輯，改回新增</button>
   </section>
 
   <section class="card">
@@ -176,6 +178,7 @@
     <input type="checkbox" class="draft-check" />
     <span class="draft-label"></span>
     <span class="draft-amount"></span>
+    <button type="button" class="draft-edit" title="編輯這筆草稿">✎</button>
     <button type="button" class="draft-del" title="刪除這筆草稿">×</button>
   </label>
 </template>
