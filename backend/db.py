@@ -40,6 +40,8 @@ def create_trip_leg(owner_name: str, leg: dict[str, Any]) -> dict[str, Any]:
         "date_to": leg.get("日期迄", ""),
         "loc_from": leg.get("地點起", ""),
         "loc_to": leg.get("地點迄", ""),
+        "addr_from": leg.get("詳細地址起", ""),
+        "addr_to": leg.get("詳細地址迄", ""),
         "amounts": leg.get("amounts", {}),
         "note": leg.get("摘要", ""),
     }
@@ -65,6 +67,8 @@ def update_trip_leg(leg_id: str, leg: dict[str, Any]) -> dict[str, Any]:
         "date_to": leg.get("日期迄", ""),
         "loc_from": leg.get("地點起", ""),
         "loc_to": leg.get("地點迄", ""),
+        "addr_from": leg.get("詳細地址起", ""),
+        "addr_to": leg.get("詳細地址迄", ""),
         "amounts": leg.get("amounts", {}),
         "note": leg.get("摘要", ""),
     }

@@ -11,14 +11,20 @@ create table if not exists feeapp_trip_legs (
   owner_name text not null,           -- 填表人姓名，用來簡單過濾「我的草稿」
   date_from text,                     -- 日期起，如 "9/1"
   date_to text,                       -- 日期迄，如 "9/2"
-  loc_from text,                      -- 地點起
-  loc_to text,                        -- 地點迄
+  loc_from text,                      -- 地點起（簡稱，如「台北」，會印在正式表單上）
+  loc_to text,                        -- 地點迄（簡稱）
+  addr_from text,                     -- 地點起的詳細地址，僅供查算里程／過路費用，不會印在正式表單上
+  addr_to text,                       -- 地點迄的詳細地址
   amounts jsonb not null default '{}'::jsonb,
   -- amounts 範例：{"自用車油":450,"自用車通行":60,"住宿費":2000,"膳雜費":600}
   -- key 只會是這十種之一：火車高鐵/計程車/自用車油/自用車通行/飛機/交通其他/住宿費/膳雜費/交際費/其他
   note text,                          -- 該趟摘要
   created_at timestamptz not null default now()
 );
+
+-- 既有專案若已建過 feeapp_trip_legs（沒有 addr_from/addr_to 欄位），補跑這兩行即可：
+alter table feeapp_trip_legs add column if not exists addr_from text;
+alter table feeapp_trip_legs add column if not exists addr_to text;
 
 -- 一般費用項次：交際費／文康費／雜支…每筆活動＝一筆草稿
 create table if not exists feeapp_expense_items (

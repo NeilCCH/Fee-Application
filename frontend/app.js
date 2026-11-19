@@ -98,6 +98,8 @@
     $("#leg_dateTo").value = leg.date_to || "";
     $("#leg_locFrom").value = leg.loc_from || "";
     $("#leg_locTo").value = leg.loc_to || "";
+    $("#leg_addrFrom").value = leg.addr_from || "";
+    $("#leg_addrTo").value = leg.addr_to || "";
     $("#leg_note").value = leg.note || "";
     const amounts = leg.amounts || {};
     Object.entries(ROW_CATEGORY_FIELD).forEach(([key, id]) => {
@@ -114,7 +116,7 @@
   }
   function cancelEditLeg() {
     state.editingLegId = null;
-    ["leg_dateFrom", "leg_dateTo", "leg_locFrom", "leg_locTo", "leg_note"].forEach(id => $("#" + id).value = "");
+    ["leg_dateFrom", "leg_dateTo", "leg_locFrom", "leg_locTo", "leg_addrFrom", "leg_addrTo", "leg_note"].forEach(id => $("#" + id).value = "");
     Object.values(ROW_CATEGORY_FIELD).forEach(id => $("#" + id).value = "");
     $("#addLegBtn").textContent = "＋ 存這筆出差明細";
     $("#cancelLegEditBtn").classList.add("hidden");
@@ -140,6 +142,8 @@
     const body = {
       owner_name: owner, "日期起": dateFrom, "日期迄": dateTo,
       "地點起": locFrom, "地點迄": locTo, amounts,
+      "詳細地址起": $("#leg_addrFrom").value.trim(),
+      "詳細地址迄": $("#leg_addrTo").value.trim(),
       "摘要": $("#leg_note").value.trim(),
     };
     const editingId = state.editingLegId;
