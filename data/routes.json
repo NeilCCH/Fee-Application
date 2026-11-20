@@ -57,8 +57,8 @@
           "address": "708臺南市安平區建平里中華西路二段317號"
         }
       ],
-      "round_trip_km": 103,
-      "round_trip_minutes": 132,
+      "round_trip_km": 108,
+      "round_trip_minutes": 144,
       "toll_nt_per_trip_type": 96,
       "toll_basis": "臨時用戶牌價，與台南行政路線相同（使用者提供）",
       "map_image": "data/route_maps/高雄_台南安平_地圖.webp",
