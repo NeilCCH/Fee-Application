@@ -103,6 +103,9 @@
     $("#leg_addrTo").value = route.stops.map(s => s.address).filter(Boolean).join("；");
     $("#leg_fuel").value = route.round_trip_km != null ? Math.round(route.round_trip_km * 5) : "";
     $("#leg_toll").value = route.toll_nt_per_trip_type != null ? route.toll_nt_per_trip_type : "";
+    if (route.round_trip_km != null) {
+      $("#leg_note").value = `自駕來回${route.round_trip_km}km×5`;
+    }
   }
 
   let routesData = { origin: null, routes: [] };
