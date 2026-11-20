@@ -34,10 +34,13 @@
         "name": "公勝保險經紀人-新營業務中心",
         "address": "730臺南市新營區興業里中山路115號"
       },
-      "round_trip_km": null,
+      "round_trip_km": 163,
       "toll_nt_per_trip_type": null,
-      "map_image": null,
-      "toll_image": null
+      "map_image": "data/route_maps/高雄_新營_地圖.webp",
+      "toll_image": null,
+      "one_way_km": 81.5,
+      "one_way_minutes": 89,
+      "note": "來回里程由單程 81.5 公里 ×2 推算（假設回程同路線），過路費待查"
     }
   ]
 }
