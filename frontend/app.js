@@ -100,7 +100,7 @@
     $("#leg_locFrom").value = ROUTE_ORIGIN_NAME;
     $("#leg_locTo").value = route.to_label;
     $("#leg_addrFrom").value = origin.address;
-    $("#leg_addrTo").value = route.stops.map(s => s.address).join("；");
+    $("#leg_addrTo").value = route.stops.map(s => s.address).filter(Boolean).join("；");
     $("#leg_fuel").value = route.round_trip_km != null ? Math.round(route.round_trip_km * 5) : "";
     $("#leg_toll").value = route.toll_nt_per_trip_type != null ? route.toll_nt_per_trip_type : "";
   }
