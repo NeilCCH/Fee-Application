@@ -23,10 +23,12 @@
         "name": "公勝保險經紀人-安平業務中心",
         "address": "708臺南市安平區建平里中華西路二段317號"
       },
-      "round_trip_km": null,
-      "toll_nt_per_trip_type": null,
-      "map_image": null,
-      "toll_image": null
+      "round_trip_km": 103,
+      "toll_nt_per_trip_type": 83,
+      "map_image": "data/route_maps/高雄_安平_地圖.webp",
+      "toll_image": "data/route_maps/高雄_安平_收費.png",
+      "round_trip_minutes": 132,
+      "toll_basis": "臨時用戶（未申辦e-tag）牌價 83.2 取整數"
     },
     {
       "name": "高雄→新營業務中心",
