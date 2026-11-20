@@ -121,7 +121,7 @@
       "round_trip_km": 185,
       "round_trip_minutes": 181,
       "toll_nt_per_trip_type": 151,
-      "toll_basis": "暫依新營過路費 151 元記錄，待使用者確認",
+      "toll_basis": "與新營相同（使用者確認），151 元",
       "map_image": "data/route_maps/高雄_台南新營_地圖.webp",
       "toll_image": null
     }
