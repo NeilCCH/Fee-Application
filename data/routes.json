@@ -44,6 +44,25 @@
       "one_way_minutes": 89,
       "note": "單程 81.5 公里（Google 地圖單去），來回 163 公里由單程×2 推算（假設回程同路線）",
       "toll_basis": "臨時用戶（未申辦e-tag）牌價 151.2 取整數"
+    },
+    {
+      "name": "高雄→台南行政＋安平",
+      "stops": [
+        {
+          "name": "公勝保險經紀人-台南行政業務中心",
+          "address": "710臺南市永康區甲頂里中正南路30號"
+        },
+        {
+          "name": "公勝保險經紀人-安平業務中心",
+          "address": "708臺南市安平區建平里中華西路二段317號"
+        }
+      ],
+      "round_trip_km": 103,
+      "round_trip_minutes": 132,
+      "toll_nt_per_trip_type": 96,
+      "toll_basis": "臨時用戶牌價，與台南行政路線相同（使用者提供）",
+      "map_image": "data/route_maps/高雄_台南安平_地圖.webp",
+      "toll_image": null
     }
   ]
 }
