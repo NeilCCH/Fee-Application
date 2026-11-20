@@ -176,28 +176,24 @@ def _set_cell_text(cell, text, keep_first_line_label=None):
         if mark_rPr is not None:
             r._element.insert(0, copy.deepcopy(mark_rPr))
 
-CATEGORY_MARK = {
-    "出差": ("★", "12305C"), "交際費": ("●", "7C3AED"), "文康費": ("▲", "DB2777"),
-    "雜支": ("■", "D97706"), "其他": ("◆", "6B7280"),
-}
+BADGE_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "templates", "badges")
 
 def _set_item_desc(cell, desc, category):
-    """項次說明：前面加上依類別區分的小圖示（形狀＋顏色），再接說明文字。"""
-    from docx.shared import Pt, RGBColor
+    """項次說明：前面放依類別的膠囊圖示，再接說明文字。"""
+    from docx.shared import Cm
     from docx.oxml.ns import qn
     p = cell.paragraphs[0]
     for r in list(p.runs):
         r._element.getparent().remove(r._element)
     pPr = p._p.find(qn('w:pPr'))
     mark_rPr = pPr.find(qn('w:rPr')) if pPr is not None else None
-    symbol, color = CATEGORY_MARK.get(category, CATEGORY_MARK["其他"])
-    label = p.add_run(symbol + " ")
-    label.font.size = Pt(10)
-    label.font.color.rgb = RGBColor.from_string(color)
-    body = p.add_run(desc)
-    for r in (label, body):
-        if mark_rPr is not None:
-            r._element.insert(0, copy.deepcopy(mark_rPr))
+    badge = os.path.join(BADGE_DIR, f"{category}.png")
+    if not os.path.exists(badge):
+        badge = os.path.join(BADGE_DIR, "其他.png")
+    p.add_run().add_picture(badge, height=Cm(0.5))
+    body = p.add_run(" " + desc)
+    if mark_rPr is not None:
+        body._element.insert(0, copy.deepcopy(mark_rPr))
 
 def _total_row_idx(t):
     """回傳 (項次列 index list, 總計列 index)"""
