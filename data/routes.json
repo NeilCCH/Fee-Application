@@ -35,12 +35,13 @@
         "address": "730臺南市新營區興業里中山路115號"
       },
       "round_trip_km": 163,
-      "toll_nt_per_trip_type": null,
+      "toll_nt_per_trip_type": 151,
       "map_image": "data/route_maps/高雄_新營_地圖.webp",
-      "toll_image": null,
+      "toll_image": "data/route_maps/高雄_新營_收費.png",
       "one_way_km": 81.5,
       "one_way_minutes": 89,
-      "note": "單程 81.5 公里（Google 地圖單去），來回 163 公里由單程×2 推算（假設回程同路線），過路費待查"
+      "note": "單程 81.5 公里（Google 地圖單去），來回 163 公里由單程×2 推算（假設回程同路線）",
+      "toll_basis": "臨時用戶（未申辦e-tag）牌價 151.2 取整數"
     }
   ]
 }
