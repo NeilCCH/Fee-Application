@@ -181,6 +181,26 @@
       "toll_basis": "無過路費（使用者確認）",
       "map_image": "data/route_maps/高雄_林園_地圖.webp",
       "toll_image": null
+    },
+    {
+      "name": "高雄→屏東＋林園",
+      "to_label": "屏東、林園",
+      "stops": [
+        {
+          "name": "公勝保險經紀人-屏東行政業務中心",
+          "address": "900屏東縣屏東市大埔里民族路213號"
+        },
+        {
+          "name": "公勝保險經紀人股份有限公司-林園業務中心",
+          "address": "832高雄市林園區沿海路二段167號之2"
+        }
+      ],
+      "round_trip_km": 74.6,
+      "round_trip_minutes": 137,
+      "toll_nt_per_trip_type": null,
+      "toll_basis": "待確認（需臨時用戶過路費截圖）",
+      "map_image": "data/route_maps/高雄_屏東林園_地圖.webp",
+      "toll_image": null
     }
   ]
 }
