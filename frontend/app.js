@@ -93,6 +93,39 @@
     el.classList.toggle("hidden", !msg);
   }
 
+  const ROUTE_ORIGIN_NAME = "高雄";
+
+  function applyRoute(route) {
+    const origin = routesData.origin;
+    $("#leg_locFrom").value = ROUTE_ORIGIN_NAME;
+    $("#leg_locTo").value = route.to_label;
+    $("#leg_addrFrom").value = origin.address;
+    $("#leg_addrTo").value = route.stops.map(s => s.address).join("；");
+    $("#leg_fuel").value = route.round_trip_km != null ? Math.round(route.round_trip_km * 5) : "";
+    $("#leg_toll").value = route.toll_nt_per_trip_type != null ? route.toll_nt_per_trip_type : "";
+  }
+
+  let routesData = { origin: null, routes: [] };
+  async function loadRouteButtons() {
+    try {
+      const resp = await fetch("/api/routes");
+      if (!resp.ok) throw new Error();
+      routesData = await resp.json();
+    } catch (e) {
+      return;
+    }
+    const box = $("#routeButtons");
+    box.innerHTML = "";
+    routesData.routes.forEach(route => {
+      const btn = document.createElement("button");
+      btn.type = "button";
+      btn.className = "route-btn";
+      btn.textContent = route.to_label;
+      btn.addEventListener("click", () => applyRoute(route));
+      box.appendChild(btn);
+    });
+  }
+
   function fillLegForm(leg) {
     $("#leg_dateFrom").value = leg.date_from || "";
     $("#leg_dateTo").value = leg.date_to || "";
@@ -513,6 +546,7 @@
   $("#c_applyDate").value = `${today.getFullYear()}-${pad(today.getMonth() + 1)}-${pad(today.getDate())}`;
 
   loadProfile();
+  loadRouteButtons();
   refreshDrafts();
   updateTripDependentUI();
 })();

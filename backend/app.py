@@ -226,6 +226,11 @@ def _cleanup(workdir: Path):
     return BackgroundTask(shutil.rmtree, workdir, ignore_errors=True)
 
 
+@app.get("/api/routes")
+def list_routes():
+    return json.loads((BASE_DIR / "data" / "routes.json").read_text(encoding="utf-8"))
+
+
 # 前端靜態檔（表單頁）
 if FRONTEND_DIR.exists():
     app.mount("/", StaticFiles(directory=str(FRONTEND_DIR), html=True), name="frontend")
