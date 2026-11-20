@@ -176,6 +176,27 @@ def _set_cell_text(cell, text, keep_first_line_label=None):
         if mark_rPr is not None:
             r._element.insert(0, copy.deepcopy(mark_rPr))
 
+CATEGORY_COLOR = {
+    "出差": "12305C", "交際費": "7C3AED", "文康費": "DB2777", "雜支": "D97706", "其他": "6B7280",
+}
+
+def _set_item_desc(cell, desc, category):
+    """項次說明：前面加上類別標籤（依類別上色），再接說明文字。"""
+    from docx.shared import RGBColor
+    from docx.oxml.ns import qn
+    p = cell.paragraphs[0]
+    for r in list(p.runs):
+        r._element.getparent().remove(r._element)
+    pPr = p._p.find(qn('w:pPr'))
+    mark_rPr = pPr.find(qn('w:rPr')) if pPr is not None else None
+    label = p.add_run(f"【{category}】")
+    label.bold = True
+    label.font.color.rgb = RGBColor.from_string(CATEGORY_COLOR.get(category, "6B7280"))
+    body = p.add_run(desc)
+    for r in (label, body):
+        if mark_rPr is not None:
+            r._element.insert(0, copy.deepcopy(mark_rPr))
+
 def _total_row_idx(t):
     """回傳 (項次列 index list, 總計列 index)"""
     for idx, row in enumerate(t.rows):
@@ -295,7 +316,7 @@ def fill_word(template_docx, data, grand, outdir):
         for j, it in enumerate(page_items):
             r = idxs[j]
             _set_cell_text(t.cell(r,0), str(start_no + j + 1))  # 項次跨頁連號
-            _set_cell_text(t.cell(r,1), it.get("說明",""))
+            _set_item_desc(t.cell(r,1), it.get("說明",""), it.get("類別") or "其他")
             amt = it.get("金額","")
             _set_cell_text(t.cell(r,7), f"{int(amt):,}" if isinstance(amt,(int,float)) else str(amt))
         for r in idxs[need:]:  # 清掉未用列殘留的項次號
