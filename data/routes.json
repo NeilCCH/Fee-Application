@@ -177,8 +177,8 @@
       ],
       "round_trip_km": 57.1,
       "round_trip_minutes": 97,
-      "toll_nt_per_trip_type": null,
-      "toll_basis": "待確認（截圖無過路費資料）",
+      "toll_nt_per_trip_type": 0,
+      "toll_basis": "無過路費（使用者確認）",
       "map_image": "data/route_maps/高雄_林園_地圖.webp",
       "toll_image": null
     }
