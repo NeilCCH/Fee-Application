@@ -1,0 +1,43 @@
+{
+  "origin": {
+    "name": "公司（高雄）",
+    "address": "813高雄市左營區新上里大順一路91號"
+  },
+  "routes": [
+    {
+      "name": "高雄→台南行政業務中心",
+      "destination": {
+        "name": "公勝保險經紀人-台南行政業務中心",
+        "address": "710臺南市永康區甲頂里中正南路30號"
+      },
+      "round_trip_km": 104,
+      "round_trip_minutes": 132,
+      "toll_nt_per_trip_type": 96,
+      "toll_basis": "臨時用戶（未申辦e-tag）牌價 96.2 取整數",
+      "map_image": "data/route_maps/高雄_台南行政中心_地圖.webp",
+      "toll_image": "data/route_maps/高雄_台南行政中心_收費.png"
+    },
+    {
+      "name": "高雄→安平業務中心",
+      "destination": {
+        "name": "公勝保險經紀人-安平業務中心",
+        "address": "708臺南市安平區建平里中華西路二段317號"
+      },
+      "round_trip_km": null,
+      "toll_nt_per_trip_type": null,
+      "map_image": null,
+      "toll_image": null
+    },
+    {
+      "name": "高雄→新營業務中心",
+      "destination": {
+        "name": "公勝保險經紀人-新營業務中心",
+        "address": "730臺南市新營區興業里中山路115號"
+      },
+      "round_trip_km": null,
+      "toll_nt_per_trip_type": null,
+      "map_image": null,
+      "toll_image": null
+    }
+  ]
+}
