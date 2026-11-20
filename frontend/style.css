@@ -115,10 +115,13 @@ input:focus, select:focus {
 input[type="number"]::-webkit-outer-spin-button,
 input[type="number"]::-webkit-inner-spin-button {
   -webkit-appearance: none;
+  appearance: none;
+  display: none;
   margin: 0;
 }
 input[type="number"] {
   -moz-appearance: textfield;
+  appearance: textfield;
 }
 .req {
   display: contents;  /* 讓這個 span 不要在 label 的 flex column 裡自成一列，
